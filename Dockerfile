@@ -9,7 +9,8 @@ RUN apt-get update -y && \
 
 # パッケージのインストール
 COPY package*.json ./
-RUN npm install
+RUN npm install && \
+    npm install @prisma/client @types/react @types/node
 
 # Prismaの設定
 COPY prisma ./prisma/
