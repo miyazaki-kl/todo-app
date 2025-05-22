@@ -1,0 +1,50 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    ports:
+      - "3000:3000"
+    volumes:
+      - .:/app
+      - /app/node_modules
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/todo_app
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    command: npm run dev
+
+  migrate:
+    build: .
+    volumes:
+      - .:/app
+      - /app/node_modules
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/todo_app
+    depends_on:
+      - db
+    command: sh scripts/migrate.sh
+
+  migrate-dev:
+    build: .
+    volumes:
+      - .:/app
+      - /app/node_modules
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/todo_app
+    depends_on:
+      - db
+    command: sh scripts/migrate-dev.sh
+
+  db:
+    image: postgres:16
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=todo_app
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data: 
