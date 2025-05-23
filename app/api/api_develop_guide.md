@@ -10,6 +10,49 @@
 - `@types/jest`
 - `ts-jest`
 
+## 型定義の共有
+フロントエンドとバックエンドで型を共有することで、型の一貫性を保ち、開発効率を向上させることができます。
+
+### 1. 型定義ファイルの配置
+```
+app/
+├── types/
+│   └── todo.ts  # 共通の型定義
+```
+
+### 2. 型定義の実装例
+```typescript
+// app/types/todo.ts
+export interface Todo {
+  id: number;
+  title: string;
+  description: string | null;
+  completed: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+```
+
+### 3. 型の使用例
+```typescript
+// フロントエンド（app/page.tsx）
+import { Todo } from './types/todo';
+
+const [todos, setTodos] = useState<Todo[]>([]);
+
+// バックエンド（app/api/todos/route.ts）
+import { Todo } from '../../types/todo';
+
+const todos: Todo[] = await prisma.todo.findMany();
+```
+
+### 4. メリット
+- フロントエンドとバックエンドで型の一貫性が保証される
+- 型の不一致によるバグを防ぐ
+- コード補完が効く
+- リファクタリングが容易
+- バグの早期発見
+
 ## 実装手順
 
 ### 1. API Routeの実装
