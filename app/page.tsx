@@ -1,5 +1,6 @@
 'use client';
 
+import React from 'react';
 import { useState, useEffect } from 'react';
 import TodoForm from './components/TodoForm';
 
@@ -32,6 +33,24 @@ export default function Home() {
     }
   };
 
+  const handleDelete = async (id: number) => {
+    try {
+      const response = await fetch(`/api/todos/${id}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        throw new Error('Todoの削除に失敗しました');
+      }
+
+      // 削除成功後、Todo一覧を更新
+      fetchTodos();
+    } catch (error) {
+      console.error('Error:', error);
+      alert('Todoの削除に失敗しました');
+    }
+  };
+
   useEffect(() => {
     fetchTodos();
   }, []);
@@ -58,13 +77,23 @@ export default function Home() {
                 key={todo.id}
                 className="border rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow"
               >
-                <h3 className="text-lg font-medium">{todo.title}</h3>
-                {todo.description && (
-                  <p className="text-gray-600 mt-2">{todo.description}</p>
-                )}
-                <p className="text-sm text-gray-500 mt-2">
-                  作成日: {new Date(todo.createdAt).toLocaleString()}
-                </p>
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h3 className="text-lg font-medium">{todo.title}</h3>
+                    {todo.description && (
+                      <p className="text-gray-600 mt-2">{todo.description}</p>
+                    )}
+                    <p className="text-sm text-gray-500 mt-2">
+                      作成日: {new Date(todo.createdAt).toLocaleString()}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => handleDelete(todo.id)}
+                    className="inline-flex justify-center rounded-md border border-transparent bg-red-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+                  >
+                    削除
+                  </button>
+                </div>
               </li>
             ))}
           </ul>
