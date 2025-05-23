@@ -11,6 +11,37 @@ if ((global as any).prisma) {
   }
 }
 
+// GET /api/todos/[id] - 指定されたTodoを取得
+export async function GET(
+  request: Request,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const id = parseInt(params.id);
+    if (isNaN(id)) {
+      return NextResponse.json({ error: '無効なIDです' }, { status: 400 });
+    }
+
+    const todo = await prisma.todo.findUnique({
+      where: { id },
+    });
+
+    if (!todo) {
+      return NextResponse.json(
+        { error: '指定されたTodoが見つかりません' },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json(todo);
+  } catch (error) {
+    return NextResponse.json(
+      { error: 'Todoの取得に失敗しました' },
+      { status: 500 }
+    );
+  }
+}
+
 // PUT /api/todos/[id] - 指定されたTodoを更新
 export async function PUT(
   request: Request,

@@ -3,6 +3,7 @@
 import React from 'react';
 import { useState, useEffect } from 'react';
 import TodoForm from './components/TodoForm';
+import { useRouter } from 'next/navigation';
 
 interface Todo {
   id: number;
@@ -16,6 +17,7 @@ interface Todo {
 export default function Home() {
   const [todos, setTodos] = useState<Todo[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const router = useRouter();
 
   const fetchTodos = async () => {
     try {
@@ -78,7 +80,7 @@ export default function Home() {
                 className="border rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow"
               >
                 <div className="flex justify-between items-start">
-                  <div>
+                  <div className="flex-1 cursor-pointer" onClick={() => router.push(`/todos/${todo.id}`)}>
                     <h3 className="text-lg font-medium">{todo.title}</h3>
                     {todo.description && (
                       <p className="text-gray-600 mt-2">{todo.description}</p>
