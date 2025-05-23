@@ -1,7 +1,15 @@
 import { NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
 
-const prisma = new PrismaClient();
+let prisma: PrismaClient;
+if ((global as any).prisma) {
+  prisma = (global as any).prisma;
+} else {
+  prisma = new PrismaClient();
+  if (process.env.NODE_ENV === 'test') {
+    (global as any).prisma = prisma;
+  }
+}
 
 // PUT /api/todos/[id] - 指定されたTodoを更新
 export async function PUT(
@@ -10,15 +18,12 @@ export async function PUT(
 ) {
   try {
     const id = parseInt(params.id);
+    if (isNaN(id)) {
+      return NextResponse.json({ error: '無効なIDです' }, { status: 400 });
+    }
+
     const body = await request.json();
     const { title, description, completed } = body;
-
-    if (isNaN(id)) {
-      return NextResponse.json(
-        { error: '無効なIDです' },
-        { status: 400 }
-      );
-    }
 
     if (!title) {
       return NextResponse.json(
@@ -28,19 +33,17 @@ export async function PUT(
     }
 
     const todo = await prisma.todo.update({
-      where: {
-        id: id,
-      },
+      where: { id },
       data: {
         title,
         description,
-        completed: completed ?? false,
+        completed,
       },
     });
 
     return NextResponse.json(todo);
-  } catch (error) {
-    if (error.code === 'P2025') {
+  } catch (error: any) {
+    if (error && typeof error === 'object' && 'code' in error && error.code === 'P2025') {
       return NextResponse.json(
         { error: '指定されたTodoが見つかりません' },
         { status: 404 }
@@ -60,23 +63,17 @@ export async function DELETE(
 ) {
   try {
     const id = parseInt(params.id);
-
     if (isNaN(id)) {
-      return NextResponse.json(
-        { error: '無効なIDです' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: '無効なIDです' }, { status: 400 });
     }
 
     const todo = await prisma.todo.delete({
-      where: {
-        id: id,
-      },
+      where: { id },
     });
 
     return NextResponse.json(todo);
-  } catch (error) {
-    if (error.code === 'P2025') {
+  } catch (error: any) {
+    if (error && typeof error === 'object' && 'code' in error && error.code === 'P2025') {
       return NextResponse.json(
         { error: '指定されたTodoが見つかりません' },
         { status: 404 }
