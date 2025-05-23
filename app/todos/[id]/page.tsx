@@ -3,15 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-
-interface Todo {
-  id: number;
-  title: string;
-  description: string | null;
-  completed: boolean;
-  createdAt: string;
-  updatedAt: string;
-}
+import { Todo } from '../../types/todo';
 
 export default function TodoDetail({ params }: { params: { id: string } }) {
   const [todo, setTodo] = useState<Todo | null>(null);

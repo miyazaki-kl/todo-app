@@ -4,15 +4,7 @@ import React from 'react';
 import { useState, useEffect } from 'react';
 import TodoForm from './components/TodoForm';
 import { useRouter } from 'next/navigation';
-
-interface Todo {
-  id: number;
-  title: string;
-  description: string | null;
-  completed: boolean;
-  createdAt: string;
-  updatedAt: string;
-}
+import { Todo } from './types/todo';
 
 export default function Home() {
   const [todos, setTodos] = useState<Todo[]>([]);
