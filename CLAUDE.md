@@ -6,6 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ### Common Commands
 - `docker compose up -d` - Start application with Docker Compose
+- `docker compose down -v` - Stop and remove containers with volumes (database reset)
 - `npm run lint` - Run ESLint
 - `npm test` - Run Jest tests
 
