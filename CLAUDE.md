@@ -5,7 +5,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Development Commands
 
 ### Common Commands
-- `npm run dev` - Start development server
+- `docker compose up -d` - Start application with Docker Compose
+- `npm run dev` - Start development server (requires local setup)
 - `npm run build` - Build for production
 - `npm run start` - Start production server
 - `npm run lint` - Run ESLint
