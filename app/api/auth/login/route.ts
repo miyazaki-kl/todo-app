@@ -1,23 +1,68 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { prisma } from '@/app/lib/prisma';
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const { email, password } = body;
 
-    // Mock API - どんな入力でも成功を返す
-    console.log('ログイン試行:', { email, password });
+    console.log('ログイン試行:', { email, password: '***' });
 
-    // 実際の認証処理はここで行う（今回はMock）
-    // 何も入力がなくても成功を返す
+    // 入力値検証
+    if (!email || !password) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: 'メールアドレスとパスワードを入力してください',
+        },
+        { status: 400 }
+      );
+    }
+
+    // データベースからユーザーを検索
+    const user = await prisma.user.findUnique({
+      where: { email },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        password: true,
+      },
+    });
+
+    // ユーザーが存在しない場合
+    if (!user) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: 'メールアドレスまたはパスワードが正しくありません',
+        },
+        { status: 401 }
+      );
+    }
+
+    // パスワード検証（平文比較）
+    if (user.password !== password) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: 'メールアドレスまたはパスワードが正しくありません',
+        },
+        { status: 401 }
+      );
+    }
+
+    // 認証成功
+    console.log('ログイン成功:', { userId: user.id, email: user.email });
+    
     return NextResponse.json(
       {
         success: true,
         message: 'ログインに成功しました',
         user: {
-          id: 1,
-          email: email || 'demo@example.com',
-          name: 'デモユーザー',
+          id: user.id,
+          email: user.email,
+          name: user.name,
         },
       },
       { status: 200 }
@@ -27,7 +72,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       {
         success: false,
-        message: 'ログインに失敗しました',
+        message: 'サーバーエラーが発生しました',
       },
       { status: 500 }
     );

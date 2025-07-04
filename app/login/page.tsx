@@ -7,14 +7,15 @@ export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    setError('');
 
     try {
-      // Mock API呼び出し
       const response = await fetch('/api/auth/login', {
         method: 'POST',
         headers: {
@@ -23,16 +24,19 @@ export default function LoginPage() {
         body: JSON.stringify({ email, password }),
       });
 
-      if (response.ok) {
+      const data = await response.json();
+
+      if (response.ok && data.success) {
         // ログイン成功
         localStorage.setItem('isLoggedIn', 'true');
+        localStorage.setItem('user', JSON.stringify(data.user));
         router.push('/'); // メインページにリダイレクト
       } else {
-        alert('ログインに失敗しました');
+        setError(data.message || 'ログインに失敗しました');
       }
     } catch (error) {
       console.error('ログインエラー:', error);
-      alert('ログインに失敗しました');
+      setError('サーバーエラーが発生しました');
     } finally {
       setIsLoading(false);
     }
@@ -51,6 +55,12 @@ export default function LoginPage() {
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
         <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
+          {error && (
+            <div className="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+              {error}
+            </div>
+          )}
+          
           <form className="space-y-6" onSubmit={handleSubmit}>
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700">
@@ -110,7 +120,13 @@ export default function LoginPage() {
             </div>
             <div className="mt-3">
               <p className="text-center text-sm text-gray-600">
-                何も入力せずにログインボタンを押してもログインできます
+                テスト用ユーザー:
+              </p>
+              <p className="text-center text-sm text-gray-500 mt-1">
+                admin@example.com / admin
+              </p>
+              <p className="text-center text-sm text-gray-500">
+                test@example.com / test123
               </p>
             </div>
           </div>
