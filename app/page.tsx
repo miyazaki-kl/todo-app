@@ -10,6 +10,7 @@ export default function Home() {
   const [todos, setTodos] = useState<Todo[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [currentUser, setCurrentUser] = useState<{id: number, email: string, name: string | null} | null>(null);
   const router = useRouter();
 
   const fetchTodos = async () => {
@@ -48,18 +49,32 @@ export default function Home() {
 
   const handleLogout = () => {
     localStorage.removeItem('isLoggedIn');
+    localStorage.removeItem('user');
     setIsLoggedIn(false);
+    setCurrentUser(null);
     router.push('/login');
   };
 
   useEffect(() => {
     // 認証状態チェック
     const loggedIn = localStorage.getItem('isLoggedIn') === 'true';
+    const userStr = localStorage.getItem('user');
+    
     setIsLoggedIn(loggedIn);
     
     if (!loggedIn) {
       router.push('/login');
       return;
+    }
+    
+    // ユーザー情報の取得
+    if (userStr) {
+      try {
+        const user = JSON.parse(userStr);
+        setCurrentUser(user);
+      } catch (error) {
+        console.error('ユーザー情報の解析エラー:', error);
+      }
     }
     
     fetchTodos();
@@ -76,12 +91,25 @@ export default function Home() {
     <main className="container mx-auto px-4 py-8">
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold">Todoアプリ</h1>
-        <button
-          onClick={handleLogout}
-          className="inline-flex justify-center rounded-md border border-transparent bg-gray-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
-        >
-          ログアウト
-        </button>
+        <div className="flex items-center space-x-4">
+          {currentUser && (
+            <div className="text-sm text-gray-600">
+              <span className="font-medium">ログイン中: </span>
+              <span className="text-gray-900">
+                {currentUser.name || currentUser.email}
+              </span>
+              {currentUser.name && (
+                <span className="text-gray-500 ml-1">({currentUser.email})</span>
+              )}
+            </div>
+          )}
+          <button
+            onClick={handleLogout}
+            className="inline-flex justify-center rounded-md border border-transparent bg-gray-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+          >
+            ログアウト
+          </button>
+        </div>
       </div>
       
       <div className="mb-8">
