@@ -80,6 +80,12 @@ prisma/
 - TypeScript strict mode enabled
 - Path aliases configured (`@/*` → `./`)
 
+### Testing Requirements
+- 実装完了後は必ず TEST.md に従って MCP tools でテストを実行すること
+- MCP Playwright を使用してE2Eテストを実行
+- パスワードハッシュ化機能の動作確認を含む完全なログインフローテスト
+- 詳細なテスト手順は TEST.md を参照
+
 ### Language Support
 - Primary language: Japanese (comments and error messages in Japanese)
 - UI and documentation in Japanese
