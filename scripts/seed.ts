@@ -1,4 +1,5 @@
 import { PrismaClient } from '@prisma/client';
+import { hashPassword } from '../app/lib/password';
 
 const prisma = new PrismaClient();
 
@@ -16,11 +17,12 @@ async function main() {
   }
 
   // adminユーザーを作成
+  const hashedAdminPassword = await hashPassword('admin');
   const adminUser = await prisma.user.create({
     data: {
       email: 'admin@example.com',
       name: '管理者',
-      password: 'admin', // 平文パスワード（開発用）
+      password: hashedAdminPassword,
     },
   });
 
@@ -36,11 +38,12 @@ async function main() {
   });
 
   if (!testUser) {
+    const hashedTestPassword = await hashPassword('test123');
     const newTestUser = await prisma.user.create({
       data: {
         email: 'test@example.com',
         name: 'テストユーザー',
-        password: 'test123',
+        password: hashedTestPassword,
       },
     });
 
