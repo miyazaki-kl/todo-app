@@ -6,11 +6,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ### Common Commands
 - `docker compose up -d` - Start application with Docker Compose
-- `npm run dev` - Start development server (requires local setup)
-- `npm run build` - Build for production
-- `npm run start` - Start production server
 - `npm run lint` - Run ESLint
 - `npm test` - Run Jest tests
+
+### IMPORTANT: Development Environment
+- **ALWAYS use Docker Compose for development** - `docker compose up -d`
+- **DO NOT use local npm commands** (`npm run dev`, `npm run build`, `npm run start`)
+- This project is configured to run exclusively in Docker containers
+- Local development setup is NOT supported and should be avoided
 
 ### Database Commands
 - `npm run db:migrate` - Deploy database migrations (production)

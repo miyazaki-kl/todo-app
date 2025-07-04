@@ -9,6 +9,7 @@ import { Todo } from './types/todo';
 export default function Home() {
   const [todos, setTodos] = useState<Todo[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const router = useRouter();
 
   const fetchTodos = async () => {
@@ -45,13 +46,43 @@ export default function Home() {
     }
   };
 
+  const handleLogout = () => {
+    localStorage.removeItem('isLoggedIn');
+    setIsLoggedIn(false);
+    router.push('/login');
+  };
+
   useEffect(() => {
+    // 認証状態チェック
+    const loggedIn = localStorage.getItem('isLoggedIn') === 'true';
+    setIsLoggedIn(loggedIn);
+    
+    if (!loggedIn) {
+      router.push('/login');
+      return;
+    }
+    
     fetchTodos();
-  }, []);
+  }, [router]);
+
+  // ログインしていない場合は何も表示しない（リダイレクト中）
+  if (!isLoggedIn) {
+    return <div className="min-h-screen flex items-center justify-center">
+      <p>ログインページにリダイレクトしています...</p>
+    </div>;
+  }
 
   return (
     <main className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-8">Todoアプリ</h1>
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="text-3xl font-bold">Todoアプリ</h1>
+        <button
+          onClick={handleLogout}
+          className="inline-flex justify-center rounded-md border border-transparent bg-gray-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+        >
+          ログアウト
+        </button>
+      </div>
       
       <div className="mb-8">
         <h2 className="text-xl font-semibold mb-4">新しいTodoを作成</h2>
