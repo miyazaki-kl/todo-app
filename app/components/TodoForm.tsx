@@ -20,12 +20,24 @@ export default function TodoForm({ onTodoCreated, onTodoDeleted, todoId }: TodoF
     setIsLoading(true);
 
     try {
+      // 現在のユーザー情報を取得
+      const userStr = localStorage.getItem('user');
+      let createdById = null;
+      if (userStr) {
+        try {
+          const user = JSON.parse(userStr);
+          createdById = user.id;
+        } catch (error) {
+          console.error('ユーザー情報の解析エラー:', error);
+        }
+      }
+
       const response = await fetch('/api/todos', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ title, description }),
+        body: JSON.stringify({ title, description, createdById }),
       });
 
       if (!response.ok) {

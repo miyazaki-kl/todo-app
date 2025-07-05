@@ -5,4 +5,10 @@ export interface Todo {
   completed: boolean;
   createdAt: string;
   updatedAt: string;
+  createdById?: number | null;
+  createdBy?: {
+    id: number;
+    name: string | null;
+    email: string;
+  } | null;
 } 

@@ -8,13 +8,14 @@ datasource db {
 }
 
 model User {
-  id        Int      @id @default(autoincrement())
-  email     String   @unique
-  name      String?
-  password  String
-  todos     Todo[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id          Int      @id @default(autoincrement())
+  email       String   @unique
+  name        String?
+  password    String
+  todos       Todo[]
+  createdTodos Todo[]   @relation("TodoCreatedBy")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
 
 model Todo {
@@ -23,7 +24,9 @@ model Todo {
   description String?
   completed   Boolean  @default(false)
   userId      Int?
+  createdById Int?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   user        User?    @relation(fields: [userId], references: [id])
+  createdBy   User?    @relation("TodoCreatedBy", fields: [createdById], references: [id])
 }
