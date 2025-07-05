@@ -2,7 +2,6 @@
 
 import React from 'react';
 import { useState, useEffect } from 'react';
-import TodoForm from './components/TodoForm';
 import { useRouter } from 'next/navigation';
 import { Todo } from './types/todo';
 
@@ -15,7 +14,13 @@ export default function Home() {
 
   const fetchTodos = async () => {
     try {
-      const response = await fetch('/api/todos');
+      // 現在のユーザーIDを取得してクエリパラメータとして送信
+      let url = '/api/todos';
+      if (currentUser?.id) {
+        url += `?currentUserId=${currentUser.id}`;
+      }
+      
+      const response = await fetch(url);
       if (!response.ok) {
         throw new Error('Todoの取得に失敗しました');
       }
@@ -76,9 +81,14 @@ export default function Home() {
         console.error('ユーザー情報の解析エラー:', error);
       }
     }
-    
-    fetchTodos();
   }, [router]);
+
+  // currentUserが設定された後にTodoを取得
+  useEffect(() => {
+    if (isLoggedIn && currentUser) {
+      fetchTodos();
+    }
+  }, [currentUser, isLoggedIn]);
 
   // ログインしていない場合は何も表示しない（リダイレクト中）
   if (!isLoggedIn) {
@@ -112,50 +122,70 @@ export default function Home() {
         </div>
       </div>
       
-      <div className="mb-8">
-        <h2 className="text-xl font-semibold mb-4">新しいTodoを作成</h2>
-        <TodoForm onTodoCreated={fetchTodos} />
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-xl font-semibold">Todo一覧</h2>
+        <button
+          onClick={() => router.push('/todos/create')}
+          className="inline-flex justify-center rounded-md border border-transparent bg-indigo-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+        >
+          新規作成
+        </button>
       </div>
-
+      
       <div>
-        <h2 className="text-xl font-semibold mb-4">Todo一覧</h2>
         {isLoading ? (
           <p>読み込み中...</p>
         ) : todos.length === 0 ? (
           <p>Todoがありません</p>
         ) : (
           <ul className="space-y-4">
-            {todos.map((todo) => (
-              <li
-                key={todo.id}
-                className="border rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow"
-              >
-                <div className="flex justify-between items-start">
-                  <div className="flex-1 cursor-pointer" onClick={() => router.push(`/todos/${todo.id}`)}>
-                    <h3 className="text-lg font-medium">{todo.title}</h3>
-                    {todo.description && (
-                      <p className="text-gray-600 mt-2">{todo.description}</p>
-                    )}
-                    <div className="text-sm text-gray-500 mt-2">
-                      <p>作成日: {new Date(todo.createdAt).toLocaleString()}</p>
-                      <p>更新日: {new Date(todo.updatedAt).toLocaleString()}</p>
-                      {todo.createdBy && (
-                        <p>作成者: {todo.createdBy.name || todo.createdBy.email}</p>
+            {todos.map((todo) => {
+              const isAssignedToCurrentUser = currentUser && todo.assignedTo?.id === currentUser.id;
+              return (
+                <li
+                  key={todo.id}
+                  className={`border rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow ${
+                    isAssignedToCurrentUser 
+                      ? 'bg-blue-50 border-blue-200' 
+                      : 'bg-white'
+                  }`}
+                >
+                  <div className="flex justify-between items-start">
+                    <div className="flex-1 cursor-pointer" onClick={() => router.push(`/todos/${todo.id}`)}>
+                      <div className="flex items-center gap-2 mb-1">
+                        {isAssignedToCurrentUser && (
+                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                            👤 担当中
+                          </span>
+                        )}
+                        <h3 className="text-lg font-medium">{todo.title}</h3>
+                      </div>
+                      {todo.description && (
+                        <p className="text-gray-600 mt-2">{todo.description}</p>
                       )}
-                      {todo.assignedTo && (
-                        <p>担当者: {todo.assignedTo.name || todo.assignedTo.email}</p>
-                      )}
+                      <div className="text-sm text-gray-500 mt-2">
+                        <p>作成日: {new Date(todo.createdAt).toLocaleString()}</p>
+                        <p>更新日: {new Date(todo.updatedAt).toLocaleString()}</p>
+                        {todo.createdBy && (
+                          <p>作成者: {todo.createdBy.name || todo.createdBy.email}</p>
+                        )}
+                        {todo.assignedTo && (
+                          <p className={isAssignedToCurrentUser ? 'font-medium text-blue-700' : ''}>
+                            担当者: {todo.assignedTo.name || todo.assignedTo.email}
+                          </p>
+                        )}
+                      </div>
                     </div>
+                    <button
+                      onClick={() => handleDelete(todo.id)}
+                      className="inline-flex justify-center rounded-md border border-transparent bg-red-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+                    >
+                      削除
+                    </button>
                   </div>
-                  <button
-                    onClick={() => handleDelete(todo.id)}
-                    className="inline-flex justify-center rounded-md border border-transparent bg-red-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
-                  >
-                    削除
-                  </button>
-                </div>
-              </li>
-            ))}
+                </li>
+              );
+            })}
           </ul>
         )}
       </div>

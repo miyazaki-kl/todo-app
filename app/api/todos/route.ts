@@ -12,8 +12,11 @@ if ((global as any).prisma) {
 }
 
 // GET /api/todos - すべてのTodoを取得
-export async function GET() {
+export async function GET(request: Request) {
   try {
+    const { searchParams } = new URL(request.url);
+    const currentUserId = searchParams.get('currentUserId');
+    
     const todos = await prisma.todo.findMany({
       include: {
         createdBy: {
@@ -35,6 +38,16 @@ export async function GET() {
         createdAt: 'desc',
       },
     });
+
+    // currentUserIdが指定されている場合、そのユーザーが担当のタスクを上位に移動
+    if (currentUserId) {
+      const userIdNum = parseInt(currentUserId);
+      const assignedTodos = todos.filter(todo => todo.assignedToId === userIdNum);
+      const otherTodos = todos.filter(todo => todo.assignedToId !== userIdNum);
+      
+      return NextResponse.json([...assignedTodos, ...otherTodos]);
+    }
+
     return NextResponse.json(todos);
   } catch (error) {
     return NextResponse.json({ error: 'Todoの取得に失敗しました' }, { status: 500 });
