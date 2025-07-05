@@ -15,6 +15,15 @@ if ((global as any).prisma) {
 export async function GET() {
   try {
     const todos = await prisma.todo.findMany({
+      include: {
+        createdBy: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+      },
       orderBy: {
         createdAt: 'desc',
       },
@@ -29,7 +38,7 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { title, description } = body;
+    const { title, description, createdById } = body;
 
     if (!title) {
       return NextResponse.json(
@@ -42,6 +51,16 @@ export async function POST(request: Request) {
       data: {
         title,
         description,
+        createdById,
+      },
+      include: {
+        createdBy: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
       },
     });
 

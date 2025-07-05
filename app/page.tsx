@@ -136,9 +136,13 @@ export default function Home() {
                     {todo.description && (
                       <p className="text-gray-600 mt-2">{todo.description}</p>
                     )}
-                    <p className="text-sm text-gray-500 mt-2">
-                      作成日: {new Date(todo.createdAt).toLocaleString()}
-                    </p>
+                    <div className="text-sm text-gray-500 mt-2">
+                      <p>作成日: {new Date(todo.createdAt).toLocaleString()}</p>
+                      <p>更新日: {new Date(todo.updatedAt).toLocaleString()}</p>
+                      {todo.createdBy && (
+                        <p>作成者: {todo.createdBy.name || todo.createdBy.email}</p>
+                      )}
+                    </div>
                   </div>
                   <button
                     onClick={() => handleDelete(todo.id)}
