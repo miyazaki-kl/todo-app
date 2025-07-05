@@ -24,6 +24,22 @@ export async function GET(
 
     const todo = await prisma.todo.findUnique({
       where: { id },
+      include: {
+        createdBy: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+        assignedTo: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+      },
     });
 
     if (!todo) {
@@ -54,7 +70,7 @@ export async function PUT(
     }
 
     const body = await request.json();
-    const { title, description, completed } = body;
+    const { title, description, completed, assignedToId } = body;
 
     if (!title) {
       return NextResponse.json(
@@ -69,6 +85,23 @@ export async function PUT(
         title,
         description,
         completed,
+        assignedToId,
+      },
+      include: {
+        createdBy: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+        assignedTo: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
       },
     });
 
