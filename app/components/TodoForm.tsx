@@ -17,6 +17,7 @@ interface TodoFormProps {
     title: string;
     description: string;
     assignedToId?: number | null;
+    completed?: boolean;
   };
   isEditMode?: boolean;
   onTodoUpdated?: () => void;
@@ -33,6 +34,7 @@ export default function TodoForm({
   const [title, setTitle] = useState(initialData?.title || '');
   const [description, setDescription] = useState(initialData?.description || '');
   const [assignedToId, setAssignedToId] = useState<number | null>(initialData?.assignedToId || null);
+  const [completed, setCompleted] = useState(initialData?.completed || false);
   const [users, setUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -70,7 +72,7 @@ export default function TodoForm({
             title, 
             description, 
             assignedToId: assignedToId || null,
-            completed: false 
+            completed: completed 
           }),
         });
 
@@ -114,6 +116,7 @@ export default function TodoForm({
         setTitle('');
         setDescription('');
         setAssignedToId(null);
+        setCompleted(false);
         onTodoCreated();
       }
     } catch (error) {
@@ -193,6 +196,22 @@ export default function TodoForm({
           ))}
         </select>
       </div>
+      {isEditMode && (
+        <div>
+          <label htmlFor="status" className="block text-sm font-medium text-gray-700">
+            ステータス
+          </label>
+          <select
+            id="status"
+            value={completed ? 'completed' : 'pending'}
+            onChange={(e) => setCompleted(e.target.value === 'completed')}
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+          >
+            <option value="pending">未完了</option>
+            <option value="completed">完了</option>
+          </select>
+        </div>
+      )}
       <div className="flex space-x-4">
         <button
           type="submit"

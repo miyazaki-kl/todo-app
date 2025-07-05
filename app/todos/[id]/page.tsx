@@ -105,6 +105,7 @@ export default function TodoDetail({ params }: { params: { id: string } }) {
                   title: todo.title,
                   description: todo.description || '',
                   assignedToId: todo.assignedToId,
+                  completed: todo.completed,
                 }}
                 isEditMode={true}
                 todoId={params.id}

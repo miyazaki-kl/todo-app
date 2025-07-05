@@ -34,23 +34,6 @@ export default function Home() {
     }
   };
 
-  const handleDelete = async (id: number) => {
-    try {
-      const response = await fetch(`/api/todos/${id}`, {
-        method: 'DELETE',
-      });
-
-      if (!response.ok) {
-        throw new Error('Todoの削除に失敗しました');
-      }
-
-      // 削除成功後、Todo一覧を更新
-      fetchTodos();
-    } catch (error) {
-      console.error('Error:', error);
-      alert('Todoの削除に失敗しました');
-    }
-  };
 
   const handleLogout = () => {
     localStorage.removeItem('isLoggedIn');
@@ -150,38 +133,35 @@ export default function Home() {
                       : 'bg-white'
                   }`}
                 >
-                  <div className="flex justify-between items-start">
-                    <div className="flex-1 cursor-pointer" onClick={() => router.push(`/todos/${todo.id}`)}>
-                      <div className="flex items-center gap-2 mb-1">
-                        {isAssignedToCurrentUser && (
-                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                            👤 担当中
-                          </span>
-                        )}
-                        <h3 className="text-lg font-medium">{todo.title}</h3>
-                      </div>
-                      {todo.description && (
-                        <p className="text-gray-600 mt-2">{todo.description}</p>
+                  <div className="cursor-pointer" onClick={() => router.push(`/todos/${todo.id}`)}>
+                    <div className="flex items-center gap-2 mb-1">
+                      {isAssignedToCurrentUser && (
+                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                          👤 担当中
+                        </span>
                       )}
-                      <div className="text-sm text-gray-500 mt-2">
-                        <p>作成日: {new Date(todo.createdAt).toLocaleString()}</p>
-                        <p>更新日: {new Date(todo.updatedAt).toLocaleString()}</p>
-                        {todo.createdBy && (
-                          <p>作成者: {todo.createdBy.name || todo.createdBy.email}</p>
-                        )}
-                        {todo.assignedTo && (
-                          <p className={isAssignedToCurrentUser ? 'font-medium text-blue-700' : ''}>
-                            担当者: {todo.assignedTo.name || todo.assignedTo.email}
-                          </p>
-                        )}
-                      </div>
+                      {todo.completed && (
+                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                          ✅ 完了
+                        </span>
+                      )}
+                      <h3 className="text-lg font-medium">{todo.title}</h3>
                     </div>
-                    <button
-                      onClick={() => handleDelete(todo.id)}
-                      className="inline-flex justify-center rounded-md border border-transparent bg-red-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
-                    >
-                      削除
-                    </button>
+                    {todo.description && (
+                      <p className="text-gray-600 mt-2">{todo.description}</p>
+                    )}
+                    <div className="text-sm text-gray-500 mt-2">
+                      <p>作成日: {new Date(todo.createdAt).toLocaleString()}</p>
+                      <p>更新日: {new Date(todo.updatedAt).toLocaleString()}</p>
+                      {todo.createdBy && (
+                        <p>作成者: {todo.createdBy.name || todo.createdBy.email}</p>
+                      )}
+                      {todo.assignedTo && (
+                        <p className={isAssignedToCurrentUser ? 'font-medium text-blue-700' : ''}>
+                          担当者: {todo.assignedTo.name || todo.assignedTo.email}
+                        </p>
+                      )}
+                    </div>
                   </div>
                 </li>
               );
