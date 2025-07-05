@@ -142,6 +142,9 @@ export default function Home() {
                       {todo.createdBy && (
                         <p>作成者: {todo.createdBy.name || todo.createdBy.email}</p>
                       )}
+                      {todo.assignedTo && (
+                        <p>担当者: {todo.assignedTo.name || todo.assignedTo.email}</p>
+                      )}
                     </div>
                   </div>
                   <button

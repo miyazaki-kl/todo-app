@@ -6,7 +6,13 @@ export interface Todo {
   createdAt: string;
   updatedAt: string;
   createdById?: number | null;
+  assignedToId?: number | null;
   createdBy?: {
+    id: number;
+    name: string | null;
+    email: string;
+  } | null;
+  assignedTo?: {
     id: number;
     name: string | null;
     email: string;

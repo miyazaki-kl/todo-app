@@ -1,55 +1,124 @@
 'use client';
 
 import React from 'react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+
+interface User {
+  id: number;
+  name: string | null;
+  email: string;
+}
 
 interface TodoFormProps {
   onTodoCreated: () => void;
   onTodoDeleted?: (id: string) => void;
   todoId?: string;
+  initialData?: {
+    title: string;
+    description: string;
+    assignedToId?: number | null;
+  };
+  isEditMode?: boolean;
+  onTodoUpdated?: () => void;
 }
 
-export default function TodoForm({ onTodoCreated, onTodoDeleted, todoId }: TodoFormProps) {
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
+export default function TodoForm({ 
+  onTodoCreated, 
+  onTodoDeleted, 
+  todoId, 
+  initialData, 
+  isEditMode = false, 
+  onTodoUpdated 
+}: TodoFormProps) {
+  const [title, setTitle] = useState(initialData?.title || '');
+  const [description, setDescription] = useState(initialData?.description || '');
+  const [assignedToId, setAssignedToId] = useState<number | null>(initialData?.assignedToId || null);
+  const [users, setUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  useEffect(() => {
+    // ユーザー一覧を取得
+    const fetchUsers = async () => {
+      try {
+        const response = await fetch('/api/users');
+        if (response.ok) {
+          const userData = await response.json();
+          setUsers(userData);
+        }
+      } catch (error) {
+        console.error('ユーザー一覧の取得エラー:', error);
+      }
+    };
+
+    fetchUsers();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
     try {
-      // 現在のユーザー情報を取得
-      const userStr = localStorage.getItem('user');
-      let createdById = null;
-      if (userStr) {
-        try {
-          const user = JSON.parse(userStr);
-          createdById = user.id;
-        } catch (error) {
-          console.error('ユーザー情報の解析エラー:', error);
+      if (isEditMode && todoId) {
+        // 編集モード
+        const response = await fetch(`/api/todos/${todoId}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ 
+            title, 
+            description, 
+            assignedToId: assignedToId || null,
+            completed: false 
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error('Todoの更新に失敗しました');
         }
+
+        if (onTodoUpdated) {
+          onTodoUpdated();
+        }
+      } else {
+        // 作成モード
+        const userStr = localStorage.getItem('user');
+        let createdById = null;
+        if (userStr) {
+          try {
+            const user = JSON.parse(userStr);
+            createdById = user.id;
+          } catch (error) {
+            console.error('ユーザー情報の解析エラー:', error);
+          }
+        }
+
+        const response = await fetch('/api/todos', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ 
+            title, 
+            description, 
+            createdById,
+            assignedToId: assignedToId || null
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error('Todoの作成に失敗しました');
+        }
+
+        setTitle('');
+        setDescription('');
+        setAssignedToId(null);
+        onTodoCreated();
       }
-
-      const response = await fetch('/api/todos', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ title, description, createdById }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Todoの作成に失敗しました');
-      }
-
-      setTitle('');
-      setDescription('');
-      onTodoCreated();
     } catch (error) {
       console.error('Error:', error);
-      alert('Todoの作成に失敗しました');
+      alert(isEditMode ? 'Todoの更新に失敗しました' : 'Todoの作成に失敗しました');
     } finally {
       setIsLoading(false);
     }
@@ -106,13 +175,31 @@ export default function TodoForm({ onTodoCreated, onTodoDeleted, todoId }: TodoF
           className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
         />
       </div>
+      <div>
+        <label htmlFor="assignedTo" className="block text-sm font-medium text-gray-700">
+          担当者
+        </label>
+        <select
+          id="assignedTo"
+          value={assignedToId || ''}
+          onChange={(e) => setAssignedToId(e.target.value ? parseInt(e.target.value) : null)}
+          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+        >
+          <option value="">担当者なし</option>
+          {users.map((user) => (
+            <option key={user.id} value={user.id}>
+              {user.name || user.email}
+            </option>
+          ))}
+        </select>
+      </div>
       <div className="flex space-x-4">
         <button
           type="submit"
           disabled={isLoading}
           className="inline-flex justify-center rounded-md border border-transparent bg-indigo-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50"
         >
-          {isLoading ? '作成中...' : 'Todoを作成'}
+{isLoading ? (isEditMode ? '更新中...' : '作成中...') : (isEditMode ? 'Todoを更新' : 'Todoを作成')}
         </button>
         {todoId && (
           <button

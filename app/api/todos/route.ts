@@ -23,6 +23,13 @@ export async function GET() {
             email: true,
           },
         },
+        assignedTo: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
       },
       orderBy: {
         createdAt: 'desc',
@@ -38,7 +45,7 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { title, description, createdById } = body;
+    const { title, description, createdById, assignedToId } = body;
 
     if (!title) {
       return NextResponse.json(
@@ -52,9 +59,17 @@ export async function POST(request: Request) {
         title,
         description,
         createdById,
+        assignedToId,
       },
       include: {
         createdBy: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+        assignedTo: {
           select: {
             id: true,
             name: true,
