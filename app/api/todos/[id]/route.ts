@@ -39,6 +39,11 @@ export async function GET(
             email: true,
           },
         },
+        labels: {
+          include: {
+            label: true,
+          },
+        },
       },
     });
 
@@ -70,7 +75,7 @@ export async function PUT(
     }
 
     const body = await request.json();
-    const { title, description, completed, assignedToId } = body;
+    const { title, description, completed, assignedToId, labelIds } = body;
 
     if (!title) {
       return NextResponse.json(
@@ -79,6 +84,11 @@ export async function PUT(
       );
     }
 
+    // 既存のラベル関連付けを削除してから新しく作成
+    await prisma.todoLabel.deleteMany({
+      where: { todoId: id },
+    });
+
     const todo = await prisma.todo.update({
       where: { id },
       data: {
@@ -86,6 +96,11 @@ export async function PUT(
         description,
         completed,
         assignedToId,
+        labels: labelIds && labelIds.length > 0 ? {
+          create: labelIds.map((labelId: number) => ({
+            labelId,
+          })),
+        } : undefined,
       },
       include: {
         createdBy: {
@@ -100,6 +115,11 @@ export async function PUT(
             id: true,
             name: true,
             email: true,
+          },
+        },
+        labels: {
+          include: {
+            label: true,
           },
         },
       },

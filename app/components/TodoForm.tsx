@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { useState, useEffect } from 'react';
+import LabelSelector from './LabelSelector';
 
 interface User {
   id: number;
@@ -18,6 +19,7 @@ interface TodoFormProps {
     description: string;
     assignedToId?: number | null;
     completed?: boolean;
+    labelIds?: number[];
   };
   isEditMode?: boolean;
   onTodoUpdated?: () => void;
@@ -35,6 +37,7 @@ export default function TodoForm({
   const [description, setDescription] = useState(initialData?.description || '');
   const [assignedToId, setAssignedToId] = useState<number | null>(initialData?.assignedToId || null);
   const [completed, setCompleted] = useState(initialData?.completed || false);
+  const [labelIds, setLabelIds] = useState<number[]>(initialData?.labelIds || []);
   const [users, setUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -72,7 +75,8 @@ export default function TodoForm({
             title, 
             description, 
             assignedToId: assignedToId || null,
-            completed: completed 
+            completed: completed,
+            labelIds: labelIds
           }),
         });
 
@@ -105,7 +109,8 @@ export default function TodoForm({
             title, 
             description, 
             createdById,
-            assignedToId: assignedToId || null
+            assignedToId: assignedToId || null,
+            labelIds: labelIds
           }),
         });
 
@@ -117,6 +122,7 @@ export default function TodoForm({
         setDescription('');
         setAssignedToId(null);
         setCompleted(false);
+        setLabelIds([]);
         onTodoCreated();
       }
     } catch (error) {
@@ -212,6 +218,10 @@ export default function TodoForm({
           </select>
         </div>
       )}
+      <LabelSelector
+        selectedLabelIds={labelIds}
+        onLabelsChange={setLabelIds}
+      />
       <div className="flex space-x-4">
         <button
           type="submit"

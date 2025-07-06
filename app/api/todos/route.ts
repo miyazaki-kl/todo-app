@@ -33,6 +33,11 @@ export async function GET(request: Request) {
             email: true,
           },
         },
+        labels: {
+          include: {
+            label: true,
+          },
+        },
       },
       orderBy: {
         createdAt: 'desc',
@@ -58,7 +63,7 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { title, description, createdById, assignedToId } = body;
+    const { title, description, createdById, assignedToId, labelIds } = body;
 
     if (!title) {
       return NextResponse.json(
@@ -73,6 +78,11 @@ export async function POST(request: Request) {
         description,
         createdById,
         assignedToId,
+        labels: labelIds && labelIds.length > 0 ? {
+          create: labelIds.map((labelId: number) => ({
+            labelId,
+          })),
+        } : undefined,
       },
       include: {
         createdBy: {
@@ -87,6 +97,11 @@ export async function POST(request: Request) {
             id: true,
             name: true,
             email: true,
+          },
+        },
+        labels: {
+          include: {
+            label: true,
           },
         },
       },

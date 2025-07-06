@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Todo } from '../../types/todo';
 import TodoForm from '../../components/TodoForm';
+import LabelBadge from '../../components/LabelBadge';
 
 export default function TodoDetail({ params }: { params: { id: string } }) {
   const [todo, setTodo] = useState<Todo | null>(null);
@@ -106,6 +107,7 @@ export default function TodoDetail({ params }: { params: { id: string } }) {
                   description: todo.description || '',
                   assignedToId: todo.assignedToId,
                   completed: todo.completed,
+                  labelIds: todo.labels?.map(l => l.label.id) || [],
                 }}
                 isEditMode={true}
                 todoId={params.id}
@@ -129,6 +131,17 @@ export default function TodoDetail({ params }: { params: { id: string } }) {
                 <div className="mb-6">
                   <h2 className="text-xl font-semibold mb-2">説明</h2>
                   <p className="text-gray-700">{todo.description}</p>
+                </div>
+              )}
+
+              {todo.labels && todo.labels.length > 0 && (
+                <div className="mb-6">
+                  <h2 className="text-xl font-semibold mb-2">ラベル</h2>
+                  <div className="flex flex-wrap gap-2">
+                    {todo.labels.map((labelRelation) => (
+                      <LabelBadge key={labelRelation.label.id} label={labelRelation.label} size="md" />
+                    ))}
+                  </div>
                 </div>
               )}
 
