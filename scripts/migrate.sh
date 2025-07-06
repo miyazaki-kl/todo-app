@@ -12,6 +12,10 @@ echo "PostgreSQL is ready!"
 echo "Running database migrations..."
 npx prisma migrate deploy
 
+# Prismaクライアントの生成
+echo "Generating Prisma client..."
+npx prisma generate
+
 # シードデータの実行
 echo "Running seed data..."
 npx tsx scripts/seed.ts
