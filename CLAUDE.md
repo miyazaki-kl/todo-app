@@ -7,6 +7,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ### Common Commands
 - `docker compose up -d` - Start application with Docker Compose
 - `docker compose down -v` - Stop and remove containers with volumes (database reset)
+- `docker compose up -d --force-recreate` - Force recreate containers and volumes
 - `npm run lint` - Run ESLint
 - `npm test` - Run Jest tests
 
@@ -53,24 +54,37 @@ prisma/
 
 ### Database Schema
 - **User**: id, email, name, todos (relation), timestamps
-- **Todo**: id, title, description, completed, user relation (optional), timestamps
+- **Todo**: id, title, description, completed, user relation (optional), labels (relation), timestamps
+- **Label**: id, name, color, todos (relation), timestamps
+- **TodoLabel**: Many-to-many relation between Todo and Label
 
 ### Key Files
-- `app/types/todo.ts` - Todo TypeScript interface
+- `app/types/todo.ts` - Todo and Label TypeScript interfaces
+- `app/components/LabelBadge.tsx` - Color-coded label display component
+- `app/components/LabelSelector.tsx` - Multi-select label picker component
 - `app/lib/prisma.ts` - Prisma client configuration
 - `prisma/schema.prisma` - Database schema definition
 - `jest.config.js` - Jest testing configuration
 
 ### API Endpoints
-- `GET /api/todos` - Fetch all todos (ordered by creation date desc)
-- `POST /api/todos` - Create new todo
-- `GET /api/todos/[id]` - Get specific todo
+- `GET /api/todos` - Fetch all todos with labels (ordered by creation date desc)
+- `POST /api/todos` - Create new todo with label assignment
+- `GET /api/todos/[id]` - Get specific todo with labels
+- `PUT /api/todos/[id]` - Update todo with label reassignment
+- `GET /api/labels` - Fetch all available labels
 - Additional CRUD operations in respective route files
 
 ### Testing
 - Jest configured with TypeScript support
 - Test files: `**/*.test.ts` and `**/*.test.tsx`
 - Path mapping: `@/*` resolves to project root
+
+### Label System
+- **Color-coded Labels**: 6 predefined labels with distinct colors (red, orange, blue, purple, green, gray)
+- **Multi-label Support**: Each Todo can have multiple labels
+- **Predefined Labels**: 緊急 (red), 重要 (orange), 進行中 (blue), レビュー (purple), 完了予定 (green), 参考 (gray)
+- **Visual Display**: Color-coded badges in todo lists and detail views
+- **Label Management**: Checkbox-based multi-select interface in forms
 
 ### Development Notes
 - Uses PostgreSQL as primary database
@@ -79,6 +93,7 @@ prisma/
 - Next.js App Router architecture
 - TypeScript strict mode enabled
 - Path aliases configured (`@/*` → `./`)
+- Label system with many-to-many relationship between Todos and Labels
 
 ### Testing Requirements
 - 実装完了後は必ず TEST.md に従って MCP tools でテストを実行すること

@@ -4,6 +4,7 @@ import React from 'react';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Todo } from './types/todo';
+import LabelBadge from './components/LabelBadge';
 
 export default function Home() {
   const [todos, setTodos] = useState<Todo[]>([]);
@@ -149,6 +150,13 @@ export default function Home() {
                     </div>
                     {todo.description && (
                       <p className="text-gray-600 mt-2">{todo.description}</p>
+                    )}
+                    {todo.labels && todo.labels.length > 0 && (
+                      <div className="flex flex-wrap gap-1 mt-2">
+                        {todo.labels.map((labelRelation) => (
+                          <LabelBadge key={labelRelation.label.id} label={labelRelation.label} />
+                        ))}
+                      </div>
                     )}
                     <div className="text-sm text-gray-500 mt-2">
                       <p>作成日: {new Date(todo.createdAt).toLocaleString()}</p>

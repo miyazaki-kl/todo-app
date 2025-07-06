@@ -1,3 +1,11 @@
+export interface Label {
+  id: number;
+  name: string;
+  color: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface Todo {
   id: number;
   title: string;
@@ -17,4 +25,7 @@ export interface Todo {
     name: string | null;
     email: string;
   } | null;
+  labels?: {
+    label: Label;
+  }[];
 } 

@@ -32,4 +32,23 @@ model Todo {
   user        User?    @relation(fields: [userId], references: [id])
   createdBy   User?    @relation("TodoCreatedBy", fields: [createdById], references: [id])
   assignedTo  User?    @relation("TodoAssignedTo", fields: [assignedToId], references: [id])
+  labels      TodoLabel[]
+}
+
+model Label {
+  id        Int         @id @default(autoincrement())
+  name      String      @unique
+  color     String      // 色コード（例: "blue", "red", "green"など）
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+  todos     TodoLabel[]
+}
+
+model TodoLabel {
+  todoId  Int
+  labelId Int
+  todo    Todo  @relation(fields: [todoId], references: [id], onDelete: Cascade)
+  label   Label @relation(fields: [labelId], references: [id], onDelete: Cascade)
+
+  @@id([todoId, labelId])
 }
