@@ -17,6 +17,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - This project is configured to run exclusively in Docker containers
 - Local development setup is NOT supported and should be avoided
 
+### Git Workflow (CRITICAL)
+- **作業開始前の必須手順**:
+  1. `git checkout main` - mainブランチに切り替え
+  2. `git pull origin main` - 最新のmainブランチを取得
+  3. `git checkout -b feature/your-feature-name` - 新しいブランチを作成
+- **絶対に既存ブランチで作業しない** - 常に最新のmainから新しいブランチを切る
+- **PRマージ後は必ず新しいブランチで次の作業を開始する**
+
 ### Database Commands
 - `npm run db:migrate` - Deploy database migrations (production)
 - `npm run db:migrate:dev` - Run migrations in development mode
