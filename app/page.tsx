@@ -135,40 +135,49 @@ export default function Home() {
                   }`}
                 >
                   <div className="cursor-pointer" onClick={() => router.push(`/todos/${todo.id}`)}>
-                    <div className="flex items-center gap-2 mb-1">
-                      {isAssignedToCurrentUser && (
-                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                          👤 担当中
-                        </span>
-                      )}
-                      {todo.completed && (
-                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                          ✅ 完了
-                        </span>
-                      )}
-                      <h3 className="text-lg font-medium">{todo.title}</h3>
-                    </div>
-                    {todo.description && (
-                      <p className="text-gray-600 mt-2">{todo.description}</p>
-                    )}
-                    {todo.labels && todo.labels.length > 0 && (
-                      <div className="flex flex-wrap gap-1 mt-2">
-                        {todo.labels.map((labelRelation) => (
-                          <LabelBadge key={labelRelation.label.id} label={labelRelation.label} />
-                        ))}
+                    <div className="flex items-start justify-between mb-2">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          {isAssignedToCurrentUser && (
+                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                              👤 担当中
+                            </span>
+                          )}
+                          {todo.completed && (
+                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                              ✅ 完了
+                            </span>
+                          )}
+                          <h3 className="text-lg font-medium">{todo.title}</h3>
+                        </div>
+                        {todo.description && (
+                          <p className="text-gray-600 mt-1 mb-2">{todo.description}</p>
+                        )}
+                        {todo.labels && todo.labels.length > 0 && (
+                          <div className="flex flex-wrap gap-1 mb-2">
+                            {todo.labels.map((labelRelation) => (
+                              <LabelBadge key={labelRelation.label.id} label={labelRelation.label} />
+                            ))}
+                          </div>
+                        )}
                       </div>
-                    )}
-                    <div className="text-sm text-gray-500 mt-2">
-                      <p>作成日: {new Date(todo.createdAt).toLocaleString()}</p>
-                      <p>更新日: {new Date(todo.updatedAt).toLocaleString()}</p>
-                      {todo.createdBy && (
-                        <p>作成者: {todo.createdBy.name || todo.createdBy.email}</p>
-                      )}
-                      {todo.assignedTo && (
-                        <p className={isAssignedToCurrentUser ? 'font-medium text-blue-700' : ''}>
-                          担当者: {todo.assignedTo.name || todo.assignedTo.email}
-                        </p>
-                      )}
+                      <div className="text-xs text-gray-500 text-right ml-4 flex-shrink-0">
+                        {todo.assignedTo && (
+                          <div className={`mb-1 ${isAssignedToCurrentUser ? 'font-medium text-blue-700' : ''}`}>
+                            担当: {todo.assignedTo.name || todo.assignedTo.email}
+                          </div>
+                        )}
+                        <div>作成: {todo.createdBy?.name || todo.createdBy?.email || '不明'}</div>
+                      </div>
+                    </div>
+                    <div className="flex justify-between items-center text-xs text-gray-400">
+                      <div className="flex gap-4">
+                        <span>作成: {new Date(todo.createdAt).toLocaleDateString()}</span>
+                        <span>更新: {new Date(todo.updatedAt).toLocaleDateString()}</span>
+                      </div>
+                      <div className="text-right">
+                        {new Date(todo.updatedAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                      </div>
                     </div>
                   </div>
                 </li>
