@@ -1,93 +1,70 @@
-import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
+import {
+  createMockPrismaClient,
+  MockPrismaClient,
+  setupApiTest,
+  MockData,
+  assertApiResponse,
+  HttpStatus,
+  ErrorResponses,
+  PrismaQueries,
+  DatabaseErrors,
+} from '../__tests__/test-utils';
 
-// PrismaClientのモック
-jest.mock('@prisma/client', () => ({
-  PrismaClient: jest.fn().mockImplementation(() => ({
-    user: {
-      findMany: jest.fn(),
-    },
-  })),
-}));
+// Create standardized mock Prisma client
+const mockPrisma = createMockPrismaClient();
+
+// Mock global prisma
+(global as any).prisma = mockPrisma;
 
 describe('Users API', () => {
-  let prisma: jest.Mocked<PrismaClient>;
-
-  beforeEach(() => {
-    jest.resetModules();
-    prisma = new PrismaClient() as jest.Mocked<PrismaClient>;
-    (global as any).prisma = prisma;
-  });
+  // Use standardized test setup
+  setupApiTest(mockPrisma);
 
   describe('GET /api/users', () => {
     it('すべてのユーザーを取得できる', async () => {
       const mockUsers = [
-        { id: 1, name: 'Alice', email: 'alice@example.com' },
-        { id: 2, name: 'Bob', email: 'bob@example.com' },
-        { id: 3, name: 'Charlie', email: 'charlie@example.com' },
+        MockData.userWithoutPassword({ id: 1, name: 'Alice', email: 'alice@example.com' }),
+        MockData.userWithoutPassword({ id: 2, name: 'Bob', email: 'bob@example.com' }),
+        MockData.userWithoutPassword({ id: 3, name: 'Charlie', email: 'charlie@example.com' }),
       ];
 
-      (prisma.user.findMany as jest.Mock).mockResolvedValue(mockUsers);
+      mockPrisma.user.findMany.mockResolvedValue(mockUsers);
 
       const { GET } = require('./route');
       const response = await GET();
-      const data = await response.json();
 
-      expect(response.constructor.name).toBe('NextResponse');
-      expect(data).toEqual(mockUsers);
-      expect(prisma.user.findMany).toHaveBeenCalledWith({
-        select: {
-          id: true,
-          name: true,
-          email: true,
-        },
-        orderBy: {
-          name: 'asc',
-        },
-      });
+      await assertApiResponse(response, HttpStatus.OK, mockUsers);
+      expect(mockPrisma.user.findMany).toHaveBeenCalledWith(PrismaQueries.USER_SELECT_SAFE);
     });
 
     it('ユーザーが名前順（昇順）で取得される', async () => {
       const mockUsers = [
-        { id: 3, name: 'Alice', email: 'alice@example.com' },
-        { id: 1, name: 'Bob', email: 'bob@example.com' },
-        { id: 2, name: 'Charlie', email: 'charlie@example.com' },
+        MockData.userWithoutPassword({ id: 3, name: 'Alice', email: 'alice@example.com' }),
+        MockData.userWithoutPassword({ id: 1, name: 'Bob', email: 'bob@example.com' }),
+        MockData.userWithoutPassword({ id: 2, name: 'Charlie', email: 'charlie@example.com' }),
       ];
 
-      (prisma.user.findMany as jest.Mock).mockResolvedValue(mockUsers);
+      mockPrisma.user.findMany.mockResolvedValue(mockUsers);
 
       const { GET } = require('./route');
       const response = await GET();
-      const data = await response.json();
 
-      expect(response.constructor.name).toBe('NextResponse');
-      expect(data).toEqual(mockUsers);
-      expect(prisma.user.findMany).toHaveBeenCalledWith({
-        select: {
-          id: true,
-          name: true,
-          email: true,
-        },
-        orderBy: {
-          name: 'asc',
-        },
-      });
+      await assertApiResponse(response, HttpStatus.OK, mockUsers);
+      expect(mockPrisma.user.findMany).toHaveBeenCalledWith(PrismaQueries.USER_SELECT_SAFE);
     });
 
     it('パスワードフィールドが除外される', async () => {
       const mockUsers = [
-        { id: 1, name: 'Alice', email: 'alice@example.com' },
-        { id: 2, name: 'Bob', email: 'bob@example.com' },
+        MockData.userWithoutPassword({ id: 1, name: 'Alice', email: 'alice@example.com' }),
+        MockData.userWithoutPassword({ id: 2, name: 'Bob', email: 'bob@example.com' }),
       ];
 
-      (prisma.user.findMany as jest.Mock).mockResolvedValue(mockUsers);
+      mockPrisma.user.findMany.mockResolvedValue(mockUsers);
 
       const { GET } = require('./route');
       const response = await GET();
-      const data = await response.json();
 
-      expect(response.constructor.name).toBe('NextResponse');
-      expect(data).toEqual(mockUsers);
+      const data = await assertApiResponse(response, HttpStatus.OK, mockUsers);
       
       // パスワードフィールドが含まれていないことを確認
       data.forEach((user: any) => {
@@ -98,56 +75,39 @@ describe('Users API', () => {
       });
 
       // selectでパスワードが除外されていることを確認
-      expect(prisma.user.findMany).toHaveBeenCalledWith({
-        select: {
-          id: true,
-          name: true,
-          email: true,
-        },
-        orderBy: {
-          name: 'asc',
-        },
-      });
+      expect(mockPrisma.user.findMany).toHaveBeenCalledWith(PrismaQueries.USER_SELECT_SAFE);
     });
 
     it('ユーザーが存在しない場合は空配列を返す', async () => {
-      (prisma.user.findMany as jest.Mock).mockResolvedValue([]);
+      mockPrisma.user.findMany.mockResolvedValue([]);
 
       const { GET } = require('./route');
       const response = await GET();
-      const data = await response.json();
 
-      expect(response.constructor.name).toBe('NextResponse');
-      expect(data).toEqual([]);
-      expect(Array.isArray(data)).toBe(true);
-      expect(data.length).toBe(0);
+      await assertApiResponse(response, HttpStatus.OK, []);
+      expect(mockPrisma.user.findMany).toHaveBeenCalledWith(PrismaQueries.USER_SELECT_SAFE);
     });
 
     it('データベースエラー時に適切なエラーレスポンスを返す', async () => {
-      (prisma.user.findMany as jest.Mock).mockRejectedValue(new Error('DBエラー'));
+      mockPrisma.user.findMany.mockRejectedValue(DatabaseErrors.CONNECTION_FAILED);
 
       const { GET } = require('./route');
       const response = await GET();
-      const data = await response.json();
 
-      expect(response.constructor.name).toBe('NextResponse');
-      expect(data).toEqual({ error: 'ユーザーの取得に失敗しました' });
-      expect(response.status).toBe(500);
+      await assertApiResponse(response, HttpStatus.INTERNAL_SERVER_ERROR, ErrorResponses.SERVER_ERROR('ユーザーの取得に失敗しました'));
     });
 
     it('完全なユーザーデータ構造を返す', async () => {
       const mockUsers = [
-        { id: 1, name: 'Test User', email: 'test@example.com' },
+        MockData.userWithoutPassword({ id: 1, name: 'Test User', email: 'test@example.com' }),
       ];
 
-      (prisma.user.findMany as jest.Mock).mockResolvedValue(mockUsers);
+      mockPrisma.user.findMany.mockResolvedValue(mockUsers);
 
       const { GET } = require('./route');
       const response = await GET();
-      const data = await response.json();
 
-      expect(response.constructor.name).toBe('NextResponse');
-      expect(data).toEqual(mockUsers);
+      const data = await assertApiResponse(response, HttpStatus.OK, mockUsers);
       
       // レスポンスデータの構造を検証
       expect(data[0]).toEqual({
@@ -155,6 +115,7 @@ describe('Users API', () => {
         name: expect.any(String),
         email: expect.any(String),
       });
+      expect(mockPrisma.user.findMany).toHaveBeenCalledWith(PrismaQueries.USER_SELECT_SAFE);
     });
   });
 });

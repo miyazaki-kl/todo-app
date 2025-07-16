@@ -1,39 +1,35 @@
-import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
+import {
+  createMockPrismaClient,
+  MockPrismaClient,
+  setupApiTest,
+  MockData,
+  convertDatesToISOStrings,
+  assertApiResponse,
+  HttpStatus,
+  ErrorResponses,
+  DatabaseErrors,
+} from '../../__tests__/test-utils';
 
-// PrismaClientのモック
-jest.mock('@prisma/client', () => ({
-  PrismaClient: jest.fn().mockImplementation(() => ({
-    todo: {
-      update: jest.fn(),
-      delete: jest.fn(),
-    },
-  })),
-}));
+// Create standardized mock Prisma client
+const mockPrisma = createMockPrismaClient();
+
+// Mock global prisma
+(global as any).prisma = mockPrisma;
 
 describe('Todo API (特定のID)', () => {
-  let prisma: jest.Mocked<PrismaClient>;
-
-  beforeEach(() => {
-    jest.resetModules();
-    prisma = new PrismaClient() as jest.Mocked<PrismaClient>;
-    (global as any).prisma = prisma;
-    jest.clearAllMocks();
-  });
+  // Use standardized test setup
+  setupApiTest(mockPrisma);
 
   describe('PUT /api/todos/[id]', () => {
     it('Todoを更新できる', async () => {
-      const now = new Date();
-      const mockTodo = {
+      const mockTodo = MockData.todo({
         id: 1,
         title: '更新されたTodo',
         description: '更新された説明',
         completed: true,
-        createdAt: now,
-        updatedAt: now,
-      };
+      });
 
-      (prisma.todo.update as jest.Mock).mockResolvedValue(mockTodo);
+      mockPrisma.todo.update.mockResolvedValue(mockTodo);
 
       const { PUT } = require('../[id]/route');
       const request = new Request('http://localhost:3000/api/todos/1', {
@@ -47,20 +43,37 @@ describe('Todo API (特定のID)', () => {
       });
 
       const response = await PUT(request, { params: { id: '1' } });
-      const data = await response.json();
 
-      expect(response.constructor.name).toBe('NextResponse');
-      expect(data).toEqual({
-        ...mockTodo,
-        createdAt: mockTodo.createdAt.toISOString(),
-        updatedAt: mockTodo.updatedAt.toISOString(),
-      });
-      expect(prisma.todo.update).toHaveBeenCalledWith({
+      await assertApiResponse(response, HttpStatus.OK, convertDatesToISOStrings(mockTodo));
+      expect(mockPrisma.todo.update).toHaveBeenCalledWith({
         where: { id: 1 },
         data: {
           title: '更新されたTodo',
           description: '更新された説明',
           completed: true,
+          assignedToId: undefined,
+          labels: undefined,
+        },
+        include: {
+          createdBy: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+            },
+          },
+          assignedTo: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+            },
+          },
+          labels: {
+            include: {
+              label: true,
+            },
+          },
         },
       });
     });
@@ -76,11 +89,8 @@ describe('Todo API (特定のID)', () => {
       });
 
       const response = await PUT(request, { params: { id: '1' } });
-      const data = await response.json();
 
-      expect(response.constructor.name).toBe('NextResponse');
-      expect(data).toEqual({ error: 'タイトルは必須です' });
-      expect(response.status).toBe(400);
+      await assertApiResponse(response, HttpStatus.BAD_REQUEST, ErrorResponses.VALIDATION_ERROR('タイトルは必須です'));
     });
 
     it('無効なIDの場合はエラーを返す', async () => {
@@ -94,17 +104,14 @@ describe('Todo API (特定のID)', () => {
       });
 
       const response = await PUT(request, { params: { id: 'invalid' } });
-      const data = await response.json();
 
-      expect(response.constructor.name).toBe('NextResponse');
-      expect(data).toEqual({ error: '無効なIDです' });
-      expect(response.status).toBe(400);
+      await assertApiResponse(response, HttpStatus.BAD_REQUEST, ErrorResponses.VALIDATION_ERROR('無効なIDです'));
     });
 
     it('存在しないTodoの場合はエラーを返す', async () => {
       const error = new Error('Record to update does not exist');
       (error as any).code = 'P2025';
-      (prisma.todo.update as jest.Mock).mockRejectedValue(error);
+      mockPrisma.todo.update.mockRejectedValue(error);
 
       const { PUT } = require('../[id]/route');
       const request = new Request('http://localhost:3000/api/todos/999', {
@@ -116,27 +123,21 @@ describe('Todo API (特定のID)', () => {
       });
 
       const response = await PUT(request, { params: { id: '999' } });
-      const data = await response.json();
 
-      expect(response.constructor.name).toBe('NextResponse');
-      expect(data).toEqual({ error: '指定されたTodoが見つかりません' });
-      expect(response.status).toBe(404);
+      await assertApiResponse(response, HttpStatus.NOT_FOUND, ErrorResponses.NOT_FOUND_ERROR('指定されたTodoが見つかりません'));
     });
   });
 
   describe('DELETE /api/todos/[id]', () => {
     it('Todoを削除できる', async () => {
-      const now = new Date();
-      const mockTodo = {
+      const mockTodo = MockData.todo({
         id: 1,
         title: '削除されるTodo',
         description: '説明',
         completed: false,
-        createdAt: now,
-        updatedAt: now,
-      };
+      });
 
-      (prisma.todo.delete as jest.Mock).mockResolvedValue(mockTodo);
+      mockPrisma.todo.delete.mockResolvedValue(mockTodo);
 
       const { DELETE } = require('../[id]/route');
       const request = new Request('http://localhost:3000/api/todos/1', {
@@ -144,15 +145,9 @@ describe('Todo API (特定のID)', () => {
       });
 
       const response = await DELETE(request, { params: { id: '1' } });
-      const data = await response.json();
 
-      expect(response.constructor.name).toBe('NextResponse');
-      expect(data).toEqual({
-        ...mockTodo,
-        createdAt: mockTodo.createdAt.toISOString(),
-        updatedAt: mockTodo.updatedAt.toISOString(),
-      });
-      expect(prisma.todo.delete).toHaveBeenCalledWith({
+      await assertApiResponse(response, HttpStatus.OK, convertDatesToISOStrings(mockTodo));
+      expect(mockPrisma.todo.delete).toHaveBeenCalledWith({
         where: { id: 1 },
       });
     });
@@ -164,17 +159,14 @@ describe('Todo API (特定のID)', () => {
       });
 
       const response = await DELETE(request, { params: { id: 'invalid' } });
-      const data = await response.json();
 
-      expect(response.constructor.name).toBe('NextResponse');
-      expect(data).toEqual({ error: '無効なIDです' });
-      expect(response.status).toBe(400);
+      await assertApiResponse(response, HttpStatus.BAD_REQUEST, ErrorResponses.VALIDATION_ERROR('無効なIDです'));
     });
 
     it('存在しないTodoの場合はエラーを返す', async () => {
       const error = new Error('Record to delete does not exist');
       (error as any).code = 'P2025';
-      (prisma.todo.delete as jest.Mock).mockRejectedValue(error);
+      mockPrisma.todo.delete.mockRejectedValue(error);
 
       const { DELETE } = require('../[id]/route');
       const request = new Request('http://localhost:3000/api/todos/999', {
@@ -182,11 +174,8 @@ describe('Todo API (特定のID)', () => {
       });
 
       const response = await DELETE(request, { params: { id: '999' } });
-      const data = await response.json();
 
-      expect(response.constructor.name).toBe('NextResponse');
-      expect(data).toEqual({ error: '指定されたTodoが見つかりません' });
-      expect(response.status).toBe(404);
+      await assertApiResponse(response, HttpStatus.NOT_FOUND, ErrorResponses.NOT_FOUND_ERROR('指定されたTodoが見つかりません'));
     });
   });
 }); 
