@@ -1,23 +1,24 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+このファイルは、このリポジトリでのコード作業時にClaude Code (claude.ai/code)にガイダンスを提供します。
 
-## Development Commands
+## 開発コマンド
 
-### Common Commands
-- `docker compose up -d` - Start application with Docker Compose
-- `docker compose down -v` - Stop and remove containers with volumes (database reset)
-- `docker compose up -d --force-recreate` - Force recreate containers and volumes
-- `npm run lint` - Run ESLint
-- `npm test` - Run Jest tests
+### 基本コマンド
+- `docker compose up -d` - Docker Composeでアプリケーションを開始
+- `docker compose down -v` - ボリュームを含めてコンテナを停止・削除（データベースリセット）
+- `docker compose up -d --force-recreate` - コンテナとボリュームを強制再作成
+- `docker compose exec app npm run lint` - ESLintを実行
+- `docker compose exec app npm test` - Jestテストを実行
 
-### IMPORTANT: Development Environment
-- **ALWAYS use Docker Compose for development** - `docker compose up -d`
-- **DO NOT use local npm commands** (`npm run dev`, `npm run build`, `npm run start`)
-- This project is configured to run exclusively in Docker containers
-- Local development setup is NOT supported and should be avoided
+### 重要：開発環境
+- **開発時は必ずDocker Composeを使用** - `docker compose up -d`
+- **ローカルnpmコマンドは絶対に使用しない** (`npm run dev`, `npm run build`, `npm run start`)
+- **すべてのnpmコマンドはDockerコンテナ内で実行** - `docker compose exec app npm run [コマンド]`
+- このプロジェクトはDockerコンテナでのみ動作するよう設定
+- ローカル開発環境のセットアップは非対応、避けること
 
-### Git Workflow (CRITICAL)
+### Gitワークフロー（重要）
 - **作業開始前の必須手順**:
   1. `git checkout main` - mainブランチに切り替え
   2. `git pull origin main` - 最新のmainブランチを取得
@@ -25,7 +26,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **絶対に既存ブランチで作業しない** - 常に最新のmainから新しいブランチを切る
 - **PRマージ後は必ず新しいブランチで次の作業を開始する**
 
-### PR管理 (IMPORTANT)
+### PR管理（重要）
 - **PRに変更を追加する前の必須確認**:
   1. `gh pr view <PR番号>` - PRのステータスを確認
   2. **マージ済みの場合**: 新しいブランチを作成して新しいPRを作成
@@ -33,90 +34,90 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **マージ済みPRには絶対に変更を追加しない**
 - **追加変更が必要な場合は必ず新しいPRを作成する**
 
-### Database Commands
-- `npm run db:migrate` - Deploy database migrations (production)
-- `npm run db:migrate:dev` - Run migrations in development mode
-- `npm run db:studio` - Open Prisma Studio for database inspection
+### データベースコマンド
+- `docker compose exec app npm run db:migrate` - データベースマイグレーション実行（本番環境）
+- `docker compose exec app npm run db:migrate:dev` - マイグレーション実行（開発環境）
+- `docker compose exec app npm run db:studio` - Prisma Studioでデータベース確認
 
-### Additional Scripts
-- `./scripts/migrate-dev.sh` - Development migration script
-- `./scripts/migrate.sh` - Production migration script
+### 追加スクリプト
+- `./scripts/migrate-dev.sh` - 開発用マイグレーションスクリプト
+- `./scripts/migrate.sh` - 本番用マイグレーションスクリプト
 
-## Architecture
+## アーキテクチャ
 
-### Tech Stack
-- **Frontend**: Next.js 14 with TypeScript, React 18, Tailwind CSS
-- **Backend**: Next.js API Routes
-- **Database**: PostgreSQL with Prisma ORM
-- **Testing**: Jest with TypeScript support
-- **Containerization**: Docker with Docker Compose
+### 技術スタック
+- **フロントエンド**: Next.js 14 with TypeScript, React 18, Tailwind CSS
+- **バックエンド**: Next.js API Routes
+- **データベース**: PostgreSQL with Prisma ORM
+- **テスト**: Jest with TypeScript support
+- **コンテナ化**: Docker with Docker Compose
 
-### Project Structure
+### プロジェクト構造
 ```
 app/
-├── api/todos/           # Todo API endpoints
-├── components/          # React components
-├── lib/                 # Utility libraries (Prisma client)
-├── todos/[id]/         # Dynamic todo detail pages
-├── types/              # TypeScript type definitions
-├── globals.css         # Global styles
-├── layout.tsx          # Root layout
-└── page.tsx            # Home page
+├── api/todos/           # Todo API エンドポイント
+├── components/          # React コンポーネント
+├── lib/                 # ユーティリティライブラリ（Prismaクライアント）
+├── todos/[id]/         # 動的Todo詳細ページ
+├── types/              # TypeScript型定義
+├── globals.css         # グローバルスタイル
+├── layout.tsx          # ルートレイアウト
+└── page.tsx            # ホームページ
 
 prisma/
-├── schema.prisma       # Database schema
-└── migrations/         # Database migrations
+├── schema.prisma       # データベーススキーマ
+└── migrations/         # データベースマイグレーション
 ```
 
-### Database Schema
-- **User**: id, email, name, todos (relation), timestamps
-- **Todo**: id, title, description, completed, user relation (optional), labels (relation), timestamps
-- **Label**: id, name, color, todos (relation), timestamps
-- **TodoLabel**: Many-to-many relation between Todo and Label
+### データベーススキーマ
+- **User**: id, email, name, todos (リレーション), timestamps
+- **Todo**: id, title, description, completed, user リレーション (オプション), labels (リレーション), timestamps
+- **Label**: id, name, color, todos (リレーション), timestamps
+- **TodoLabel**: Todo と Label の多対多リレーション
 
-### Key Files
-- `app/types/todo.ts` - Todo and Label TypeScript interfaces
-- `app/components/LabelBadge.tsx` - Color-coded label display component
-- `app/components/LabelSelector.tsx` - Multi-select label picker component
-- `app/lib/prisma.ts` - Prisma client configuration
-- `prisma/schema.prisma` - Database schema definition
-- `jest.config.js` - Jest testing configuration
+### 主要ファイル
+- `app/types/todo.ts` - Todo と Label の TypeScript インターフェース
+- `app/components/LabelBadge.tsx` - 色分けされたラベル表示コンポーネント
+- `app/components/LabelSelector.tsx` - 複数選択ラベルピッカーコンポーネント
+- `app/lib/prisma.ts` - Prisma クライアント設定
+- `prisma/schema.prisma` - データベーススキーマ定義
+- `jest.config.js` - Jest テスト設定
 
-### API Endpoints
-- `GET /api/todos` - Fetch all todos with labels (ordered by creation date desc)
-- `POST /api/todos` - Create new todo with label assignment
-- `GET /api/todos/[id]` - Get specific todo with labels
-- `PUT /api/todos/[id]` - Update todo with label reassignment
-- `GET /api/labels` - Fetch all available labels
-- Additional CRUD operations in respective route files
+### API エンドポイント
+- `GET /api/todos` - ラベル付きTodo一覧取得（作成日降順）
+- `POST /api/todos` - ラベル割り当て付きTodo新規作成
+- `GET /api/todos/[id]` - ラベル付き特定Todo取得
+- `PUT /api/todos/[id]` - ラベル再割り当て付きTodo更新
+- `GET /api/labels` - 利用可能なラベル一覧取得
+- その他のCRUD操作は各ルートファイルで実装
 
-### Testing
-- Jest configured with TypeScript support
-- Test files: `**/*.test.ts` and `**/*.test.tsx`
-- Path mapping: `@/*` resolves to project root
+### テスト
+- Jest でTypeScriptサポート設定済み
+- テストファイル: `**/*.test.ts` と `**/*.test.tsx`
+- パスマッピング: `@/*` → プロジェクトルートに解決
 
-### Label System
-- **Color-coded Labels**: 6 predefined labels with distinct colors (red, orange, blue, purple, green, gray)
-- **Multi-label Support**: Each Todo can have multiple labels
-- **Predefined Labels**: 緊急 (red), 重要 (orange), 進行中 (blue), レビュー (purple), 完了予定 (green), 参考 (gray)
-- **Visual Display**: Color-coded badges in todo lists and detail views
-- **Label Management**: Checkbox-based multi-select interface in forms
+### ラベルシステム
+- **カラーコード化ラベル**: 6つの定義済みラベル（赤、オレンジ、青、紫、緑、灰色）
+- **マルチラベル対応**: 各Todoは複数のラベルを持つことが可能
+- **定義済みラベル**: 緊急（赤）、重要（オレンジ）、進行中（青）、レビュー（紫）、完了予定（緑）、参考（灰色）
+- **視覚的表示**: Todo一覧と詳細ビューでカラーコード化バッジ表示
+- **ラベル管理**: フォームでのチェックボックス型複数選択インターフェース
 
-### Development Notes
-- Uses PostgreSQL as primary database
-- Prisma manages database schema and migrations
-- Global Prisma client with test environment handling
-- Next.js App Router architecture
-- TypeScript strict mode enabled
-- Path aliases configured (`@/*` → `./`)
-- Label system with many-to-many relationship between Todos and Labels
+### 開発ノート
+- PostgreSQL をメインデータベースとして使用
+- Prisma でデータベーススキーマとマイグレーションを管理
+- テスト環境対応のグローバルPrismaクライアント
+- Next.js App Router アーキテクチャ
+- TypeScript strict mode 有効
+- パスエイリアス設定（`@/*` → `./`）
+- Todo と Label の多対多関係によるラベルシステム
 
-### Testing Requirements
+### テスト要件
 - 実装完了後は必ず TEST.md に従って MCP tools でテストを実行すること
 - MCP Playwright を使用してE2Eテストを実行
 - パスワードハッシュ化機能の動作確認を含む完全なログインフローテスト
 - 詳細なテスト手順は TEST.md を参照
 
-### Language Support
-- Primary language: Japanese (comments and error messages in Japanese)
-- UI and documentation in Japanese
+### 言語サポート
+- 主要言語: 日本語（コメントとエラーメッセージ）
+- UI とドキュメント: 日本語
