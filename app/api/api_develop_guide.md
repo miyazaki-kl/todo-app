@@ -575,10 +575,19 @@ module.exports = {
 
 ```bash
 # すべてのTodoを取得・作成するAPIのテスト
-npx jest app/api/todos/route.test.ts
+docker compose exec app npx jest app/api/todos/route.test.ts
 
 # 特定のIDに対するTodoの更新・削除APIのテスト
-npx jest app/api/todos/id/route.test.ts
+docker compose exec app npx jest app/api/todos/id/route.test.ts
+
+# 全てのテストを実行
+docker compose exec app npm test
+
+# 特定のファイルのみテスト実行
+docker compose exec app npx jest [ファイルパス]
+
+# テストをウォッチモードで実行
+docker compose exec app npm run test:watch
 ```
 
 ## 注意点

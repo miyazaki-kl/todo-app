@@ -43,6 +43,11 @@
 - `./scripts/migrate-dev.sh` - 開発用マイグレーションスクリプト
 - `./scripts/migrate.sh` - 本番用マイグレーションスクリプト
 
+### テストコマンド
+- `docker compose exec app npm test` - 全てのテストを実行
+- `docker compose exec app npx jest [ファイルパス]` - 特定のファイルのみテスト実行
+- `docker compose exec app npm run test:watch` - テストをウォッチモードで実行
+
 ## アーキテクチャ
 
 ### 技術スタック
