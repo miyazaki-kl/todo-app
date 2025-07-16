@@ -10,6 +10,53 @@
 - `@types/jest`
 - `ts-jest`
 
+## テストユーティリティの使用
+このプロジェクトでは、一貫したテストパターンを実現するために標準化されたテストユーティリティを使用します。
+
+### テストユーティリティの場所
+```
+app/api/__tests__/test-utils.ts
+```
+
+### 基本的な使用方法
+```typescript
+import {
+  createMockPrismaClient,
+  setupApiTest,
+  MockData,
+  convertDatesToISOStrings,
+  assertApiResponse,
+  HttpStatus,
+  ErrorResponses,
+  PrismaQueries,
+  DatabaseErrors,
+} from '../__tests__/test-utils';
+
+// 標準化されたモックPrismaクライアントを作成
+const mockPrisma = createMockPrismaClient();
+
+// グローバルprismaをモックに設定
+(global as any).prisma = mockPrisma;
+
+describe('API Test', () => {
+  // 標準化されたテストセットアップを使用
+  setupApiTest(mockPrisma);
+  
+  it('should work', async () => {
+    // モックデータファクトリーを使用
+    const mockTodo = MockData.todo({ title: 'Test Todo' });
+    mockPrisma.todo.findMany.mockResolvedValue([mockTodo]);
+    
+    const { GET } = require('./route');
+    const response = await GET();
+    
+    // 標準化されたレスポンス検証を使用
+    await assertApiResponse(response, HttpStatus.OK, convertDatesToISOStrings([mockTodo]));
+    expect(mockPrisma.todo.findMany).toHaveBeenCalledWith(PrismaQueries.TODO_INCLUDE_RELATIONS);
+  });
+});
+```
+
 ## 型定義の共有
 フロントエンドとバックエンドで型を共有することで、型の一貫性を保ち、開発効率を向上させることができます。
 
@@ -76,57 +123,63 @@ if ((global as any).prisma) {
 > - ファイル先頭で`const prisma = new PrismaClient();`のように即時生成すると、テスト時にモックが反映されません。
 > - テスト時は`jest.resetModules()`と`global.prisma`の差し替えを必ず行い、`require`でAPI実装を都度読み直してください。
 
-### 2. テストの実装
+### 2. テストの実装（推奨：標準化されたテストユーティリティを使用）
 `app/api/todos/route.test.ts`に以下のコードを実装します。
 
 ```typescript
-import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
+import {
+  createMockPrismaClient,
+  setupApiTest,
+  MockData,
+  convertDatesToISOStrings,
+  assertApiResponse,
+  HttpStatus,
+  ErrorResponses,
+  PrismaQueries,
+  DatabaseErrors,
+} from '../__tests__/test-utils';
 
-// PrismaClientのモック
-jest.mock('@prisma/client', () => ({
-  PrismaClient: jest.fn().mockImplementation(() => ({
-    todo: {
-      findMany: jest.fn(),
-      create: jest.fn(),
-    },
-  })),
-}));
+// 標準化されたモックPrismaクライアントを作成
+const mockPrisma = createMockPrismaClient();
+
+// グローバルprismaをモックに設定
+(global as any).prisma = mockPrisma;
 
 describe('Todo API', () => {
-  let prisma: jest.Mocked<PrismaClient>;
-
-  beforeEach(() => {
-    jest.resetModules();
-    prisma = new PrismaClient() as jest.Mocked<PrismaClient>;
-    (global as any).prisma = prisma;
-  });
+  // 標準化されたテストセットアップを使用
+  setupApiTest(mockPrisma);
 
   describe('GET /api/todos', () => {
     it('すべてのTodoを取得できる', async () => {
-      const now = new Date();
-      const mockTodos = [
-        { id: 1, title: 'テスト1', description: '説明1', completed: false, createdAt: now, updatedAt: now },
-        { id: 2, title: 'テスト2', description: '説明2', completed: true, createdAt: now, updatedAt: now },
+      const mockDbTodos = [
+        MockData.todo({ 
+          id: 1, 
+          title: 'テスト1', 
+          description: '説明1', 
+          completed: false,
+          createdBy: MockData.userWithoutPassword({ id: 1, name: 'User 1', email: 'user1@example.com' }),
+          assignedTo: null,
+          labels: []
+        }),
+        MockData.todo({ 
+          id: 2, 
+          title: 'テスト2', 
+          description: '説明2', 
+          completed: true,
+          createdBy: MockData.userWithoutPassword({ id: 2, name: 'User 2', email: 'user2@example.com' }),
+          assignedTo: MockData.userWithoutPassword({ id: 1, name: 'User 1', email: 'user1@example.com' }),
+          labels: []
+        }),
       ];
 
-      (prisma.todo.findMany as jest.Mock).mockResolvedValue(mockTodos);
+      mockPrisma.todo.findMany.mockResolvedValue(mockDbTodos);
 
       const { GET } = require('./route');
-      const response = await GET();
-      const data = await response.json();
+      const request = new Request('http://localhost:3000/api/todos');
+      const response = await GET(request);
 
-      expect(response.constructor.name).toBe('NextResponse');
-      expect(data).toEqual(
-        mockTodos.map(todo => ({
-          ...todo,
-          createdAt: todo.createdAt.toISOString(),
-          updatedAt: todo.updatedAt.toISOString(),
-        }))
-      );
-      expect(prisma.todo.findMany).toHaveBeenCalledWith({
-        orderBy: { createdAt: 'desc' },
-      });
+      await assertApiResponse(response, HttpStatus.OK, convertDatesToISOStrings(mockDbTodos));
+      expect(mockPrisma.todo.findMany).toHaveBeenCalledWith(PrismaQueries.TODO_INCLUDE_RELATIONS);
     });
 
     it('エラー時に適切なエラーレスポンスを返す', async () => {
