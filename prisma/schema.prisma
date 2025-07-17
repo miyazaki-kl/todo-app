@@ -15,6 +15,7 @@ model User {
   todos       Todo[]
   createdTodos Todo[]   @relation("TodoCreatedBy")
   assignedTodos Todo[]  @relation("TodoAssignedTo")
+  projects    Project[]
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
@@ -27,11 +28,13 @@ model Todo {
   userId      Int?
   createdById Int?
   assignedToId Int?
+  projectId   Int?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   user        User?    @relation(fields: [userId], references: [id])
   createdBy   User?    @relation("TodoCreatedBy", fields: [createdById], references: [id])
   assignedTo  User?    @relation("TodoAssignedTo", fields: [assignedToId], references: [id])
+  project     Project? @relation(fields: [projectId], references: [id])
   labels      TodoLabel[]
 }
 
@@ -42,6 +45,18 @@ model Label {
   createdAt DateTime    @default(now())
   updatedAt DateTime    @updatedAt
   todos     TodoLabel[]
+}
+
+model Project {
+  id          Int      @id @default(autoincrement())
+  name        String
+  description String?
+  color       String   @default("blue")
+  createdById Int?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  createdBy   User?    @relation(fields: [createdById], references: [id])
+  todos       Todo[]
 }
 
 model TodoLabel {

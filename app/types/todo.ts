@@ -6,6 +6,21 @@ export interface Label {
   updatedAt: string;
 }
 
+export interface Project {
+  id: number;
+  name: string;
+  description: string | null;
+  color: string;
+  createdById: number | null;
+  createdAt: string;
+  updatedAt: string;
+  createdBy?: {
+    id: number;
+    name: string | null;
+    email: string;
+  } | null;
+}
+
 export interface Todo {
   id: number;
   title: string;
@@ -15,6 +30,7 @@ export interface Todo {
   updatedAt: string;
   createdById?: number | null;
   assignedToId?: number | null;
+  projectId?: number | null;
   createdBy?: {
     id: number;
     name: string | null;
@@ -25,6 +41,7 @@ export interface Todo {
     name: string | null;
     email: string;
   } | null;
+  project?: Project | null;
   labels?: {
     label: Label;
   }[];

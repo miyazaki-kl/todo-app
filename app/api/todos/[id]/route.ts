@@ -39,6 +39,21 @@ export async function GET(
             email: true,
           },
         },
+        project: {
+          select: {
+            id: true,
+            name: true,
+            description: true,
+            color: true,
+            createdBy: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+              },
+            },
+          },
+        },
         labels: {
           include: {
             label: true,
@@ -75,7 +90,7 @@ export async function PUT(
     }
 
     const body = await request.json();
-    const { title, description, completed, assignedToId, labelIds } = body;
+    const { title, description, completed, assignedToId, projectId, labelIds } = body;
 
     if (!title) {
       return NextResponse.json(
@@ -96,6 +111,7 @@ export async function PUT(
         description,
         completed,
         assignedToId,
+        projectId,
         labels: labelIds && labelIds.length > 0 ? {
           create: labelIds.map((labelId: number) => ({
             labelId,
@@ -115,6 +131,21 @@ export async function PUT(
             id: true,
             name: true,
             email: true,
+          },
+        },
+        project: {
+          select: {
+            id: true,
+            name: true,
+            description: true,
+            color: true,
+            createdBy: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+              },
+            },
           },
         },
         labels: {

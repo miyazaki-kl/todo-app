@@ -3,6 +3,7 @@
 import React from 'react';
 import { useState, useEffect } from 'react';
 import LabelSelector from './LabelSelector';
+import ProjectSelector from './ProjectSelector';
 
 interface User {
   id: number;
@@ -18,6 +19,7 @@ interface TodoFormProps {
     title: string;
     description: string;
     assignedToId?: number | null;
+    projectId?: number | null;
     completed?: boolean;
     labelIds?: number[];
   };
@@ -36,6 +38,7 @@ export default function TodoForm({
   const [title, setTitle] = useState(initialData?.title || '');
   const [description, setDescription] = useState(initialData?.description || '');
   const [assignedToId, setAssignedToId] = useState<number | null>(initialData?.assignedToId || null);
+  const [projectId, setProjectId] = useState<number | null>(initialData?.projectId || null);
   const [completed, setCompleted] = useState(initialData?.completed || false);
   const [labelIds, setLabelIds] = useState<number[]>(initialData?.labelIds || []);
   const [users, setUsers] = useState<User[]>([]);
@@ -75,6 +78,7 @@ export default function TodoForm({
             title, 
             description, 
             assignedToId: assignedToId || null,
+            projectId: projectId || null,
             completed: completed,
             labelIds: labelIds
           }),
@@ -110,6 +114,7 @@ export default function TodoForm({
             description, 
             createdById,
             assignedToId: assignedToId || null,
+            projectId: projectId || null,
             labelIds: labelIds
           }),
         });
@@ -121,6 +126,7 @@ export default function TodoForm({
         setTitle('');
         setDescription('');
         setAssignedToId(null);
+        setProjectId(null);
         setCompleted(false);
         setLabelIds([]);
         onTodoCreated();
@@ -218,6 +224,10 @@ export default function TodoForm({
           </select>
         </div>
       )}
+      <ProjectSelector
+        selectedProjectId={projectId}
+        onProjectChange={setProjectId}
+      />
       <LabelSelector
         selectedLabelIds={labelIds}
         onLabelsChange={setLabelIds}
