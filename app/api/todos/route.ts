@@ -33,6 +33,21 @@ export async function GET(request: Request) {
             email: true,
           },
         },
+        project: {
+          select: {
+            id: true,
+            name: true,
+            description: true,
+            color: true,
+            createdBy: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+              },
+            },
+          },
+        },
         labels: {
           include: {
             label: true,
@@ -63,7 +78,7 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { title, description, createdById, assignedToId, labelIds } = body;
+    const { title, description, createdById, assignedToId, projectId, labelIds } = body;
 
     if (!title) {
       return NextResponse.json(
@@ -78,6 +93,7 @@ export async function POST(request: Request) {
         description,
         createdById,
         assignedToId,
+        projectId,
         labels: labelIds && labelIds.length > 0 ? {
           create: labelIds.map((labelId: number) => ({
             labelId,
@@ -97,6 +113,21 @@ export async function POST(request: Request) {
             id: true,
             name: true,
             email: true,
+          },
+        },
+        project: {
+          select: {
+            id: true,
+            name: true,
+            description: true,
+            color: true,
+            createdBy: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+              },
+            },
           },
         },
         labels: {
