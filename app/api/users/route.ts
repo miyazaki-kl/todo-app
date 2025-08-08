@@ -11,6 +11,7 @@ export const GET = withAuth(async (request: NextRequest, user) => {
         name: true,
         email: true,
         isAdmin: true,
+        createdAt: true,
       },
       orderBy: {
         name: 'asc',

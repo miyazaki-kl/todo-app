@@ -8,6 +8,7 @@ interface User {
   email: string;
   name: string;
   isAdmin: boolean;
+  createdAt: string;
 }
 
 interface NewUser {
@@ -29,23 +30,57 @@ export default function AdminUsersPage() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [showForm, setShowForm] = useState(false);
+  const [isVerifyingAdmin, setIsVerifyingAdmin] = useState(true);
   const router = useRouter();
 
-  // 管理者権限チェック
+  // 管理者権限チェック（クライアントサイド + サーバーサイド）
   useEffect(() => {
-    const user = localStorage.getItem('user');
-    if (!user) {
-      router.push('/login');
-      return;
-    }
+    const verifyAdminAccess = async () => {
+      try {
+        // 1. クライアントサイドでの基本チェック
+        const user = localStorage.getItem('user');
+        const token = localStorage.getItem('authToken');
+        
+        if (!user || !token) {
+          router.push('/login');
+          return;
+        }
 
-    const userData = JSON.parse(user);
-    if (!userData.isAdmin) {
-      router.push('/');
-      return;
-    }
+        const userData = JSON.parse(user);
+        if (!userData.isAdmin) {
+          router.push('/');
+          return;
+        }
 
-    loadUsers();
+        // 2. サーバーサイドでの管理者権限確認
+        const response = await fetch('/api/auth/verify-admin', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        if (!response.ok) {
+          console.error('管理者権限確認失敗:', response.status);
+          router.push('/');
+          return;
+        }
+
+        const verificationData = await response.json();
+        if (!verificationData.success) {
+          router.push('/');
+          return;
+        }
+
+        // 管理者権限が確認できたらユーザー一覧をロード
+        setIsVerifyingAdmin(false);
+        loadUsers();
+      } catch (error) {
+        console.error('管理者権限確認エラー:', error);
+        router.push('/');
+      }
+    };
+
+    verifyAdminAccess();
   }, [router]);
 
   const loadUsers = async () => {
@@ -104,6 +139,18 @@ export default function AdminUsersPage() {
     }
   };
 
+  // 管理者権限確認中の表示
+  if (isVerifyingAdmin) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">管理者権限を確認しています...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-4xl mx-auto">
@@ -122,7 +169,7 @@ export default function AdminUsersPage() {
                   onClick={() => router.push('/')}
                   className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                 >
-                  メインページへ
+                  戻る
                 </button>
               </div>
             </div>
@@ -139,72 +186,75 @@ export default function AdminUsersPage() {
               </div>
             )}
 
-            {/* 新規ユーザー作成フォーム */}
             {showForm && (
-              <div className="mb-6 p-4 border border-gray-200 rounded-lg bg-gray-50">
+              <div className="mb-8 bg-gray-50 p-6 rounded-lg">
                 <h2 className="text-lg font-medium text-gray-900 mb-4">新規ユーザー作成</h2>
                 <form onSubmit={handleCreateUser} className="space-y-4">
-                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                    <div>
-                      <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                        メールアドレス
-                      </label>
-                      <input
-                        id="email"
-                        type="email"
-                        required
-                        value={newUser.email}
-                        onChange={(e) => setNewUser({...newUser, email: e.target.value})}
-                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                      />
-                    </div>
-                    <div>
-                      <label htmlFor="name" className="block text-sm font-medium text-gray-700">
-                        名前
-                      </label>
-                      <input
-                        id="name"
-                        type="text"
-                        required
-                        value={newUser.name}
-                        onChange={(e) => setNewUser({...newUser, name: e.target.value})}
-                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                      />
-                    </div>
+                  <div>
+                    <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+                      メールアドレス
+                    </label>
+                    <input
+                      type="email"
+                      id="email"
+                      required
+                      value={newUser.email}
+                      onChange={(e) => setNewUser({...newUser, email: e.target.value})}
+                      className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="name" className="block text-sm font-medium text-gray-700">
+                      名前
+                    </label>
+                    <input
+                      type="text"
+                      id="name"
+                      required
+                      value={newUser.name}
+                      onChange={(e) => setNewUser({...newUser, name: e.target.value})}
+                      className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                    />
                   </div>
                   <div>
                     <label htmlFor="password" className="block text-sm font-medium text-gray-700">
                       パスワード
                     </label>
                     <input
-                      id="password"
                       type="password"
+                      id="password"
                       required
                       value={newUser.password}
                       onChange={(e) => setNewUser({...newUser, password: e.target.value})}
-                      className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                      placeholder="6文字以上で入力してください"
+                      className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                     />
+                    <p className="mt-1 text-sm text-gray-500">
+                      8文字以上、数字と文字を含む必要があります
+                    </p>
                   </div>
                   <div>
-                    <div className="flex items-center">
+                    <label className="flex items-center">
                       <input
-                        id="isAdmin"
                         type="checkbox"
                         checked={newUser.isAdmin}
                         onChange={(e) => setNewUser({...newUser, isAdmin: e.target.checked})}
-                        className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                        className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
                       />
-                      <label htmlFor="isAdmin" className="ml-2 block text-sm text-gray-900">
-                        管理者権限を付与する
-                      </label>
-                    </div>
+                      <span className="ml-2 text-sm text-gray-700">管理者権限を付与</span>
+                    </label>
                   </div>
-                  <div className="flex justify-end">
+                  <div className="flex justify-end space-x-3">
+                    <button
+                      type="button"
+                      onClick={() => setShowForm(false)}
+                      className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                    >
+                      キャンセル
+                    </button>
                     <button
                       type="submit"
                       disabled={isLoading}
-                      className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
                     >
                       {isLoading ? '作成中...' : 'ユーザー作成'}
                     </button>
@@ -213,57 +263,43 @@ export default function AdminUsersPage() {
               </div>
             )}
 
-            {/* ユーザー一覧テーブル */}
-            <div className="overflow-hidden shadow ring-1 ring-black ring-opacity-5 md:rounded-lg">
-              <table className="min-w-full divide-y divide-gray-300">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      ID
-                    </th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      名前
-                    </th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      メールアドレス
-                    </th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      権限
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {users.map((user) => (
-                    <tr key={user.id}>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                        {user.id}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {user.name}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {user.email}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                          user.isAdmin 
-                            ? 'bg-red-100 text-red-800' 
-                            : 'bg-green-100 text-green-800'
-                        }`}>
-                          {user.isAdmin ? '管理者' : '一般ユーザー'}
+            <div className="bg-white shadow overflow-hidden sm:rounded-md">
+              <ul className="divide-y divide-gray-200">
+                {users.map((user) => (
+                  <li key={user.id} className="px-6 py-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center">
+                        <div className="flex-shrink-0 h-10 w-10">
+                          <div className="h-10 w-10 rounded-full bg-indigo-500 flex items-center justify-center">
+                            <span className="text-sm font-medium text-white">
+                              {user.name[0]?.toUpperCase()}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="ml-4">
+                          <div className="text-sm font-medium text-gray-900">
+                            {user.name}
+                          </div>
+                          <div className="text-sm text-gray-500">
+                            {user.email}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        {user.isAdmin && (
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                            管理者
+                          </span>
+                        )}
+                        <span className="text-sm text-gray-500">
+                          {user.createdAt ? new Date(user.createdAt).toLocaleDateString('ja-JP') : '不明'}
                         </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+                      </div>
+                    </div>
+                  </li>
+                ))}
+              </ul>
             </div>
-
-            {users.length === 0 && (
-              <div className="text-center py-4">
-                <p className="text-sm text-gray-500">ユーザーが見つかりません</p>
-              </div>
-            )}
           </div>
         </div>
       </div>
