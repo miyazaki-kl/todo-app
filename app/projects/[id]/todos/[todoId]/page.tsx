@@ -303,7 +303,7 @@ export default function ProjectTodoDetail() {
         </button>
 
         <button
-          onClick={() => router.push(`/todos/${todo.id}/edit`)}
+          onClick={() => router.push(`/projects/${projectId}/todos/${todo.id}/edit`)}
           className="inline-flex justify-center rounded-md border border-indigo-300 bg-indigo-50 py-2 px-4 text-sm font-medium text-indigo-700 shadow-sm hover:bg-indigo-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
         >
           編集
