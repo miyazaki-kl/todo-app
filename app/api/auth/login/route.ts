@@ -31,6 +31,7 @@ export async function POST(request: NextRequest) {
         email: true,
         name: true,
         password: true,
+        isAdmin: true,
       },
     });
 
@@ -62,6 +63,7 @@ export async function POST(request: NextRequest) {
       userId: user.id,
       email: user.email,
       name: user.name,
+      isAdmin: user.isAdmin,
     });
 
     // 認証成功
@@ -78,6 +80,7 @@ export async function POST(request: NextRequest) {
           id: user.id,
           email: user.email,
           name: user.name,
+          isAdmin: user.isAdmin,
         },
       },
       { status: 200 }

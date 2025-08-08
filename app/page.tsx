@@ -11,7 +11,7 @@ export default function Home() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [currentUser, setCurrentUser] = useState<{id: number, email: string, name: string | null} | null>(null);
+  const [currentUser, setCurrentUser] = useState<{id: number, email: string, name: string | null, isAdmin?: boolean} | null>(null);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
   const router = useRouter();
@@ -126,6 +126,14 @@ export default function Home() {
           >
             プロフィール設定
           </button>
+          {currentUser?.isAdmin && (
+            <button
+              onClick={() => router.push('/admin/users')}
+              className="inline-flex justify-center rounded-md border border-transparent bg-red-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+            >
+              ユーザー管理
+            </button>
+          )}
           <button
             onClick={handleLogout}
             className="inline-flex justify-center rounded-md border border-transparent bg-gray-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"

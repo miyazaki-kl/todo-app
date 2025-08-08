@@ -328,6 +328,7 @@ export const PrismaQueries = {
       email: true,
       name: true,
       password: true,
+      isAdmin: true,
     },
   },
 
