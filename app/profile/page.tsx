@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { validatePassword, getPasswordStrengthMessage, getPasswordStrengthColor } from '@/app/lib/password-validation';
+import { apiClient } from '@/app/lib/api-client';
 
 export default function ProfilePage() {
   const [currentUser, setCurrentUser] = useState<{id: number, email: string, name: string | null} | null>(null);
@@ -81,21 +82,13 @@ export default function ProfilePage() {
     setMessage('');
 
     try {
-      const response = await fetch('/api/users/password', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          userId: currentUser.id,
-          currentPassword,
-          newPassword,
-        }),
+      const data = await apiClient.put<{success: boolean, message?: string}>('/api/users/password', {
+        userId: currentUser.id,
+        currentPassword,
+        newPassword,
       });
 
-      const data = await response.json();
-
-      if (response.ok && data.success) {
+      if (data.success) {
         setMessage('パスワードが正常に変更されました');
         setMessageType('success');
         // フォームをリセット
@@ -108,7 +101,7 @@ export default function ProfilePage() {
       }
     } catch (error) {
       console.error('パスワード変更エラー:', error);
-      setMessage('サーバーエラーが発生しました');
+      setMessage(error instanceof Error ? error.message : 'サーバーエラーが発生しました');
       setMessageType('error');
     } finally {
       setIsLoading(false);
@@ -118,6 +111,7 @@ export default function ProfilePage() {
   const handleLogout = () => {
     localStorage.removeItem('isLoggedIn');
     localStorage.removeItem('user');
+    apiClient.clearAuthToken();
     router.push('/login');
   };
 

@@ -1,8 +1,9 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/app/lib/prisma';
+import { withAuth } from '@/app/lib/auth-middleware';
 
 // GET /api/users - すべてのユーザーを取得（担当者選択用）
-export async function GET() {
+export const GET = withAuth(async (request: NextRequest, user) => {
   try {
     const users = await prisma.user.findMany({
       select: {
@@ -18,4 +19,4 @@ export async function GET() {
   } catch (error) {
     return NextResponse.json({ error: 'ユーザーの取得に失敗しました' }, { status: 500 });
   }
-}
+})

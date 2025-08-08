@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Todo } from '@/app/types/todo';
 import LabelBadge from '@/app/components/LabelBadge';
 import ProjectBadge from '@/app/components/ProjectBadge';
+import { apiClient } from '@/app/lib/api-client';
 
 export default function MyPage() {
   const [assignedTodos, setAssignedTodos] = useState<Todo[]>([]);
@@ -20,20 +21,17 @@ export default function MyPage() {
       setIsLoading(true);
       
       // 担当しているTODOを取得
-      const assignedResponse = await fetch(`/api/todos?assignedToId=${currentUser.id}`);
-      if (assignedResponse.ok) {
-        const assignedData = await assignedResponse.json();
-        setAssignedTodos(assignedData);
-      }
+      const assignedData = await apiClient.get<Todo[]>(`/api/todos?assignedToId=${currentUser.id}`);
+      setAssignedTodos(assignedData);
       
       // 作成したTODOを取得
-      const createdResponse = await fetch(`/api/todos?createdById=${currentUser.id}`);
-      if (createdResponse.ok) {
-        const createdData = await createdResponse.json();
-        setCreatedTodos(createdData);
-      }
+      const createdData = await apiClient.get<Todo[]>(`/api/todos?createdById=${currentUser.id}`);
+      setCreatedTodos(createdData);
     } catch (error) {
       console.error('Error fetching todos:', error);
+      // エラーの場合は空配列を設定
+      setAssignedTodos([]);
+      setCreatedTodos([]);
     } finally {
       setIsLoading(false);
     }

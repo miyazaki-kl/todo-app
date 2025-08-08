@@ -1,8 +1,9 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/app/lib/prisma';
+import { withAuth } from '@/app/lib/auth-middleware';
 
 // GET /api/todos - すべてのTodoを取得
-export async function GET(request: Request) {
+export const GET = withAuth(async (request: NextRequest, user) => {
   try {
     const { searchParams } = new URL(request.url);
     const currentUserId = searchParams.get('currentUserId');
@@ -79,10 +80,10 @@ export async function GET(request: Request) {
   } catch (error) {
     return NextResponse.json({ error: 'Todoの取得に失敗しました' }, { status: 500 });
   }
-}
+})
 
 // POST /api/todos - 新しいTodoを作成
-export async function POST(request: Request) {
+export const POST = withAuth(async (request: NextRequest, user) => {
   try {
     const body = await request.json();
     const { title, description, createdById, assignedToId, projectId, labelIds } = body;
@@ -159,4 +160,4 @@ export async function POST(request: Request) {
       { status: 500 }
     );
   }
-} 
+}) 

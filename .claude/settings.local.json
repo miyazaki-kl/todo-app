@@ -38,7 +38,11 @@
       "mcp__serena__think_about_collected_information",
       "mcp__serena__write_memory",
       "mcp__serena__replace_regex",
-      "mcp__serena__replace_symbol_body"
+      "mcp__serena__replace_symbol_body",
+      "mcp__playwright__browser_navigate_back",
+      "mcp__serena__find_file",
+      "mcp__serena__find_symbol",
+      "mcp__playwright__browser_console_messages"
     ],
     "deny": []
   }

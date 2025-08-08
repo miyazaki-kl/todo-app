@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Project } from '@/app/types/todo';
 import ProjectForm from '@/app/components/ProjectForm';
 import ProjectBadge from '@/app/components/ProjectBadge';
+import { apiClient } from '@/app/lib/api-client';
 
 export default function Home() {
   const [projects, setProjects] = useState<Project[]>([]);
@@ -17,11 +18,7 @@ export default function Home() {
 
   const fetchProjects = async () => {
     try {
-      const response = await fetch('/api/projects');
-      if (!response.ok) {
-        throw new Error('プロジェクトの取得に失敗しました');
-      }
-      const data = await response.json();
+      const data = await apiClient.get<Project[]>('/api/projects');
       setProjects(data);
     } catch (error) {
       console.error('Error:', error);
@@ -34,6 +31,8 @@ export default function Home() {
   const handleLogout = () => {
     localStorage.removeItem('isLoggedIn');
     localStorage.removeItem('user');
+    localStorage.removeItem('authToken');
+    apiClient.clearAuthToken();
     setIsLoggedIn(false);
     setCurrentUser(null);
     router.push('/login');

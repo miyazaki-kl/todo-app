@@ -30,6 +30,10 @@ export default function LoginPage() {
         // ログイン成功
         localStorage.setItem('isLoggedIn', 'true');
         localStorage.setItem('user', JSON.stringify(data.user));
+        // JWTトークンを保存
+        if (data.token) {
+          localStorage.setItem('authToken', data.token);
+        }
         router.push('/'); // メインページにリダイレクト
       } else {
         setError(data.message || 'ログインに失敗しました');

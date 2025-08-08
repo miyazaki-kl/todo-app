@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/app/lib/prisma';
+import { withAuth } from '@/app/lib/auth-middleware';
 
 // GET /api/projects/[id] - 特定のプロジェクトを取得
-export async function GET(
+export const GET = withAuth(async (
   request: NextRequest,
+  user,
   { params }: { params: { id: string } }
-) {
+) => {
   try {
     const projectId = parseInt(params.id);
     
@@ -49,13 +51,14 @@ export async function GET(
       { status: 500 }
     );
   }
-}
+})
 
 // PUT /api/projects/[id] - プロジェクトを更新
-export async function PUT(
+export const PUT = withAuth(async (
   request: NextRequest,
+  user,
   { params }: { params: { id: string } }
-) {
+) => {
   try {
     const projectId = parseInt(params.id);
     
@@ -119,13 +122,14 @@ export async function PUT(
       { status: 500 }
     );
   }
-}
+})
 
 // DELETE /api/projects/[id] - プロジェクトを削除
-export async function DELETE(
+export const DELETE = withAuth(async (
   request: NextRequest,
+  user,
   { params }: { params: { id: string } }
-) {
+) => {
   try {
     const projectId = parseInt(params.id);
     
@@ -180,4 +184,4 @@ export async function DELETE(
       { status: 500 }
     );
   }
-}
+})

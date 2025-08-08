@@ -1,73 +1,141 @@
-export interface ApiError extends Error {
-  status?: number;
-}
-
-export interface ApiResponse<T = any> {
-  data?: T;
-  error?: string;
-  success?: boolean;
-}
-
 class ApiClient {
-  private baseUrl: string;
+  private baseURL: string;
 
-  constructor(baseUrl = '/api') {
-    this.baseUrl = baseUrl;
+  constructor() {
+    this.baseURL = '';
   }
 
-  private async request<T>(
-    endpoint: string,
-    options: RequestInit = {}
-  ): Promise<T> {
-    const url = `${this.baseUrl}${endpoint}`;
-    
-    const config: RequestInit = {
-      headers: {
-        'Content-Type': 'application/json',
-        ...options.headers,
-      },
-      ...options,
+  /**
+   * 認証トークンを取得
+   */
+  private getAuthToken(): string | null {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('authToken');
+    }
+    return null;
+  }
+
+  /**
+   * デフォルトヘッダーを取得
+   */
+  private getHeaders(): HeadersInit {
+    const headers: HeadersInit = {
+      'Content-Type': 'application/json',
     };
 
-    try {
-      const response = await fetch(url, config);
-      
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        const error = new Error(errorData.error || `HTTP error! status: ${response.status}`) as ApiError;
-        error.status = response.status;
-        throw error;
-      }
+    const token = this.getAuthToken();
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+      // デバッグ用ログ
+      console.log('APIクライアント: 認証ヘッダーを設定', {
+        hasToken: true,
+        tokenStart: token.substring(0, 20) + '...'
+      });
+    } else {
+      console.log('APIクライアント: 認証トークンが見つかりません');
+    }
 
-      return await response.json();
-    } catch (error) {
-      if (error instanceof Error) {
-        throw error;
+    return headers;
+  }
+
+  /**
+   * APIレスポンスのエラーハンドリング
+   */
+  private async handleResponse<T>(response: Response): Promise<T> {
+    if (!response.ok) {
+      // 401エラーの場合、ログイン画面にリダイレクト
+      if (response.status === 401) {
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('authToken');
+          localStorage.removeItem('isLoggedIn');
+          localStorage.removeItem('user');
+          window.location.href = '/login';
+        }
       }
-      throw new Error('ネットワークエラーが発生しました');
+      
+      const error = await response.json().catch(() => ({ message: 'エラーが発生しました' }));
+      throw new Error(error.message || `HTTP error! status: ${response.status}`);
+    }
+
+    return response.json();
+  }
+
+  /**
+   * GETリクエスト
+   */
+  async get<T>(endpoint: string, params?: Record<string, any>): Promise<T> {
+    const url = new URL(`${this.baseURL}${endpoint}`, window.location.origin);
+    
+    if (params) {
+      Object.keys(params).forEach(key => {
+        if (params[key] !== undefined && params[key] !== null) {
+          url.searchParams.append(key, params[key].toString());
+        }
+      });
+    }
+
+    const response = await fetch(url.toString(), {
+      method: 'GET',
+      headers: this.getHeaders(),
+    });
+
+    return this.handleResponse<T>(response);
+  }
+
+  /**
+   * POSTリクエスト
+   */
+  async post<T>(endpoint: string, data?: any): Promise<T> {
+    const response = await fetch(`${this.baseURL}${endpoint}`, {
+      method: 'POST',
+      headers: this.getHeaders(),
+      body: JSON.stringify(data),
+    });
+
+    return this.handleResponse<T>(response);
+  }
+
+  /**
+   * PUTリクエスト
+   */
+  async put<T>(endpoint: string, data?: any): Promise<T> {
+    const response = await fetch(`${this.baseURL}${endpoint}`, {
+      method: 'PUT',
+      headers: this.getHeaders(),
+      body: JSON.stringify(data),
+    });
+
+    return this.handleResponse<T>(response);
+  }
+
+  /**
+   * DELETEリクエスト
+   */
+  async delete<T>(endpoint: string): Promise<T> {
+    const response = await fetch(`${this.baseURL}${endpoint}`, {
+      method: 'DELETE',
+      headers: this.getHeaders(),
+    });
+
+    return this.handleResponse<T>(response);
+  }
+
+  /**
+   * 認証トークンを設定
+   */
+  setAuthToken(token: string): void {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('authToken', token);
     }
   }
 
-  async get<T>(endpoint: string): Promise<T> {
-    return this.request<T>(endpoint, { method: 'GET' });
-  }
-
-  async post<T>(endpoint: string, data?: any): Promise<T> {
-    return this.request<T>(endpoint, {
-      method: 'POST',
-      body: data ? JSON.stringify(data) : undefined,
-    });
-  }
-
-  async put<T>(endpoint: string, data?: any): Promise<T> {
-    return this.request<T>(endpoint, {
-      method: 'PUT',
-      body: data ? JSON.stringify(data) : undefined,
-    });
-  }
-
-  async delete<T>(endpoint: string): Promise<T> {
-    return this.request<T>(endpoint, { method: 'DELETE' });
+  /**
+   * 認証トークンをクリア
+   */
+  clearAuthToken(): void {
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('authToken');
+    }
   }
 }
 

@@ -1,8 +1,9 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/app/lib/prisma';
+import { withAuth } from '@/app/lib/auth-middleware';
 
 // GET /api/projects - すべてのプロジェクトを取得
-export async function GET(request: Request) {
+export const GET = withAuth(async (request: NextRequest, user) => {
   try {
     const projects = await prisma.project.findMany({
       include: {
@@ -28,10 +29,10 @@ export async function GET(request: Request) {
   } catch (error) {
     return NextResponse.json({ error: 'プロジェクトの取得に失敗しました' }, { status: 500 });
   }
-}
+})
 
 // POST /api/projects - 新しいプロジェクトを作成
-export async function POST(request: Request) {
+export const POST = withAuth(async (request: NextRequest, user) => {
   try {
     const body = await request.json();
     const { name, description, color, createdById } = body;
@@ -73,4 +74,4 @@ export async function POST(request: Request) {
       { status: 500 }
     );
   }
-}
+})

@@ -1,11 +1,13 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/app/lib/prisma';
+import { withAuth } from '@/app/lib/auth-middleware';
 
 // GET /api/todos/[id] - 指定されたTodoを取得
-export async function GET(
-  request: Request,
+export const GET = withAuth(async (
+  request: NextRequest,
+  user,
   { params }: { params: { id: string } }
-) {
+) => {
   try {
     const id = parseInt(params.id);
     if (isNaN(id)) {
@@ -66,13 +68,14 @@ export async function GET(
       { status: 500 }
     );
   }
-}
+})
 
 // PUT /api/todos/[id] - 指定されたTodoを更新
-export async function PUT(
-  request: Request,
+export const PUT = withAuth(async (
+  request: NextRequest,
+  user,
   { params }: { params: { id: string } }
-) {
+) => {
   try {
     const id = parseInt(params.id);
     if (isNaN(id)) {
@@ -159,13 +162,14 @@ export async function PUT(
       { status: 500 }
     );
   }
-}
+})
 
 // DELETE /api/todos/[id] - 指定されたTodoを削除
-export async function DELETE(
-  request: Request,
+export const DELETE = withAuth(async (
+  request: NextRequest,
+  user,
   { params }: { params: { id: string } }
-) {
+) => {
   try {
     const id = parseInt(params.id);
     if (isNaN(id)) {
@@ -189,4 +193,4 @@ export async function DELETE(
       { status: 500 }
     );
   }
-} 
+}) 

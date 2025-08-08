@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { Todo, Project } from '@/app/types/todo';
 import TodoForm from '@/app/components/TodoForm';
+import { apiClient } from '@/app/lib/api-client';
 
 export default function EditTodoPage() {
   const [todo, setTodo] = useState<Todo | null>(null);
@@ -18,11 +19,8 @@ export default function EditTodoPage() {
 
   const fetchProject = async () => {
     try {
-      const response = await fetch(`/api/projects/${projectId}`);
-      if (!response.ok) {
-        throw new Error('プロジェクトの取得に失敗しました');
-      }
-      const data = await response.json();
+      const data = await apiClient.get<Project>(`/api/projects/${projectId}`);
+      
       setProject(data);
     } catch (error) {
       console.error('Error:', error);

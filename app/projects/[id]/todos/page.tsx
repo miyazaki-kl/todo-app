@@ -6,6 +6,7 @@ import { useRouter, useParams } from 'next/navigation';
 import { Todo, Project } from '@/app/types/todo';
 import LabelBadge from '@/app/components/LabelBadge';
 import ProjectBadge from '@/app/components/ProjectBadge';
+import { apiClient } from '@/app/lib/api-client';
 
 export default function ProjectTodos() {
   const [todos, setTodos] = useState<Todo[]>([]);
@@ -19,11 +20,7 @@ export default function ProjectTodos() {
 
   const fetchProject = async () => {
     try {
-      const response = await fetch(`/api/projects/${projectId}`);
-      if (!response.ok) {
-        throw new Error('プロジェクトの取得に失敗しました');
-      }
-      const data = await response.json();
+      const data = await apiClient.get<Project>(`/api/projects/${projectId}`);
       setProject(data);
     } catch (error) {
       console.error('Error:', error);
@@ -38,11 +35,7 @@ export default function ProjectTodos() {
         url += `&currentUserId=${currentUser.id}`;
       }
       
-      const response = await fetch(url);
-      if (!response.ok) {
-        throw new Error('Todoの取得に失敗しました');
-      }
-      const data = await response.json();
+      const data = await apiClient.get<Todo[]>(url);
       setTodos(data);
     } catch (error) {
       console.error('Error:', error);

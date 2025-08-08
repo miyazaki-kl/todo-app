@@ -52,7 +52,7 @@ export default function TodoForm({
   const [labelIds, setLabelIds] = useState<number[]>(initialData?.labelIds || []);
   
   // 新しいフックを使用
-  const { data: users } = useApiData<User[]>('/users');
+  const { data: users } = useApiData<User[]>('/api/users');
   const createTodo = useCreateTodo();
   const updateTodo = useUpdateTodo();
   const deleteTodo = useDeleteTodo();

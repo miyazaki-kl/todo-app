@@ -6,6 +6,7 @@ import { useRouter, useParams } from 'next/navigation';
 import { Project } from '@/app/types/todo';
 import ProjectBadge from '@/app/components/ProjectBadge';
 import TodoForm from '@/app/components/TodoForm';
+import { apiClient } from '@/app/lib/api-client';
 
 export default function CreateProjectTodo() {
   const [project, setProject] = useState<Project | null>(null);
@@ -18,11 +19,8 @@ export default function CreateProjectTodo() {
 
   const fetchProject = async () => {
     try {
-      const response = await fetch(`/api/projects/${projectId}`);
-      if (!response.ok) {
-        throw new Error('プロジェクトの取得に失敗しました');
-      }
-      const data = await response.json();
+      const data = await apiClient.get<Project>(`/api/projects/${projectId}`);
+      
       setProject(data);
     } catch (error) {
       console.error('Error:', error);
