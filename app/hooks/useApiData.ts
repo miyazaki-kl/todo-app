@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { apiClient, ApiError } from '@/app/lib/password';
+import { apiClient, ApiError } from '@/app/lib/api-client';
 
 interface UseApiDataOptions<T> {
   initialData?: T;

@@ -1,7 +1,7 @@
 'use client';
 
 import { useApiData, useApiMutation } from './useApiData';
-import { apiClient } from '@/app/lib/password';
+import { apiClient } from '@/app/lib/api-client';
 import { getCurrentUserId } from '@/app/lib/user-utils';
 import { Todo } from '@/app/types/todo';
 
