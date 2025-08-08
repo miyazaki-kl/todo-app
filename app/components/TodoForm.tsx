@@ -2,8 +2,11 @@
 
 import React from 'react';
 import { useState, useEffect } from 'react';
+import { useApiData } from '@/app/hooks/useApiData';
+import { useCreateTodo, useUpdateTodo, useDeleteTodo } from '@/app/hooks/useTodo';
 import LabelSelector from './LabelSelector';
 import ProjectSelector from './ProjectSelector';
+import { Todo } from '@/app/types/todo';
 
 interface User {
   id: number;
@@ -47,88 +50,35 @@ export default function TodoForm({
   );
   const [completed, setCompleted] = useState(initialData?.completed || false);
   const [labelIds, setLabelIds] = useState<number[]>(initialData?.labelIds || []);
-  const [users, setUsers] = useState<User[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
-
-  useEffect(() => {
-    // ユーザー一覧を取得
-    const fetchUsers = async () => {
-      try {
-        const response = await fetch('/api/users');
-        if (response.ok) {
-          const userData = await response.json();
-          setUsers(userData);
-        }
-      } catch (error) {
-        console.error('ユーザー一覧の取得エラー:', error);
-      }
-    };
-
-    fetchUsers();
-  }, []);
+  
+  // 新しいフックを使用
+  const { data: users } = useApiData<User[]>('/users');
+  const createTodo = useCreateTodo();
+  const updateTodo = useUpdateTodo();
+  const deleteTodo = useDeleteTodo();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
-
+    
     try {
+      const todoData = {
+        title,
+        description,
+        assignedToId: assignedToId || null,
+        projectId: formProjectId || null,
+        completed,
+        labelIds,
+      };
+
       if (isEditMode && todoId) {
-        // 編集モード
-        const response = await fetch(`/api/todos/${todoId}`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ 
-            title, 
-            description, 
-            assignedToId: assignedToId || null,
-            projectId: formProjectId || null,
-            completed: completed,
-            labelIds: labelIds
-          }),
+        await updateTodo.mutate({
+          id: parseInt(todoId),
+          ...todoData,
         });
-
-        if (!response.ok) {
-          throw new Error('Todoの更新に失敗しました');
-        }
-
-        if (onTodoUpdated) {
-          onTodoUpdated();
-        }
+        onTodoUpdated?.();
       } else {
-        // 作成モード
-        const userStr = localStorage.getItem('user');
-        let createdById = null;
-        if (userStr) {
-          try {
-            const user = JSON.parse(userStr);
-            createdById = user.id;
-          } catch (error) {
-            console.error('ユーザー情報の解析エラー:', error);
-          }
-        }
-
-        const response = await fetch('/api/todos', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ 
-            title, 
-            description, 
-            createdById,
-            assignedToId: assignedToId || null,
-            projectId: formProjectId || null,
-            labelIds: labelIds
-          }),
-        });
-
-        if (!response.ok) {
-          throw new Error('Todoの作成に失敗しました');
-        }
-
+        await createTodo.mutate(todoData);
+        // フォームリセット
         setTitle('');
         setDescription('');
         setAssignedToId(null);
@@ -140,34 +90,22 @@ export default function TodoForm({
         onTodoCreated();
       }
     } catch (error) {
-      console.error('Error:', error);
-      alert(isEditMode ? 'Todoの更新に失敗しました' : 'Todoの作成に失敗しました');
-    } finally {
-      setIsLoading(false);
+      console.error('Todo操作エラー:', error);
+      // フック内でエラー状態とメッセージが管理されているため、追加の処理は不要
+      // デバッグとモニタリングのためログを出力
     }
   };
 
   const handleDelete = async () => {
     if (!todoId) return;
     
-    setIsDeleting(true);
     try {
-      const response = await fetch(`/api/todos/${todoId}`, {
-        method: 'DELETE',
-      });
-
-      if (!response.ok) {
-        throw new Error('Todoの削除に失敗しました');
-      }
-
-      if (onTodoDeleted) {
-        onTodoDeleted(todoId);
-      }
+      await deleteTodo.mutate(parseInt(todoId));
+      onTodoDeleted?.(todoId);
     } catch (error) {
-      console.error('Error:', error);
-      alert('Todoの削除に失敗しました');
-    } finally {
-      setIsDeleting(false);
+      console.error('Todo操作エラー:', error);
+      // フック内でエラー状態とメッセージが管理されているため、追加の処理は不要
+      // デバッグとモニタリングのためログを出力
     }
   };
 
@@ -209,7 +147,7 @@ export default function TodoForm({
           className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
         >
           <option value="">担当者なし</option>
-          {users.map((user) => (
+          {users?.map((user) => (
             <option key={user.id} value={user.id}>
               {user.name || user.email}
             </option>
@@ -242,13 +180,28 @@ export default function TodoForm({
         selectedLabelIds={labelIds}
         onLabelsChange={setLabelIds}
       />
+      
+      {/* エラー表示 */}
+      {(createTodo.error || updateTodo.error || deleteTodo.error) && (
+        <div className="rounded-md bg-red-50 p-4">
+          <div className="flex">
+            <div className="ml-3">
+              <h3 className="text-sm font-medium text-red-800">エラーが発生しました</h3>
+              <div className="mt-2 text-sm text-red-700">
+                {createTodo.error || updateTodo.error || deleteTodo.error}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      
       <div className="flex space-x-4">
         <button
           type="submit"
-          disabled={isLoading}
+          disabled={createTodo.isLoading || updateTodo.isLoading}
           className="inline-flex justify-center rounded-md border border-transparent bg-indigo-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50"
         >
-{isLoading ? (isEditMode ? '更新中...' : '作成中...') : (isEditMode ? 'Todoを更新' : 'Todoを作成')}
+{(createTodo.isLoading || updateTodo.isLoading) ? (isEditMode ? '更新中...' : '作成中...') : (isEditMode ? 'Todoを更新' : 'Todoを作成')}
         </button>
         {onCancel && (
           <button
@@ -263,10 +216,10 @@ export default function TodoForm({
           <button
             type="button"
             onClick={handleDelete}
-            disabled={isDeleting}
+            disabled={deleteTodo.isLoading}
             className="inline-flex justify-center rounded-md border border-transparent bg-red-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 disabled:opacity-50"
           >
-            {isDeleting ? '削除中...' : '削除'}
+            {deleteTodo.isLoading ? '削除中...' : '削除'}
           </button>
         )}
       </div>
