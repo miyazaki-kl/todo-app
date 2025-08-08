@@ -9,6 +9,7 @@ import {
   ErrorResponses,
   PrismaQueries,
   DatabaseErrors,
+  mockWithAuth
 } from '../__tests__/test-utils';
 
 // Create standardized mock Prisma client
@@ -20,6 +21,10 @@ const mockPrisma = createMockPrismaClient();
 describe('Labels API', () => {
   // Use standardized test setup
   setupApiTest(mockPrisma);
+  
+  beforeEach(() => {
+    mockWithAuth();
+  });
 
   describe('GET /api/labels', () => {
     it('すべてのラベルを名前順で取得できる', async () => {

@@ -8,6 +8,7 @@ import {
   HttpStatus,
   ErrorResponses,
   DatabaseErrors,
+  mockWithAuth
 } from '../../__tests__/test-utils';
 
 // Create standardized mock Prisma client
@@ -19,6 +20,10 @@ const mockPrisma = createMockPrismaClient();
 describe('Todo API (特定のID)', () => {
   // Use standardized test setup
   setupApiTest(mockPrisma);
+  
+  beforeEach(() => {
+    mockWithAuth();
+  });
 
   describe('PUT /api/todos/[id]', () => {
     it('Todoを更新できる', async () => {

@@ -1,6 +1,16 @@
 import jwt from 'jsonwebtoken';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secret-jwt-key-change-this-in-production';
+const JWT_SECRET = (() => {
+  const secret = process.env.JWT_SECRET;
+  if (!secret) {
+    // テスト環境では固定シークレットを使用
+    if (process.env.NODE_ENV === 'test') {
+      return 'test-jwt-secret-for-unit-tests-only';
+    }
+    throw new Error('JWT_SECRET environment variable is required but not set');
+  }
+  return secret;
+})();;;
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '7d';
 
 export interface TokenPayload {
