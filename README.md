@@ -4,10 +4,12 @@
 
 このプロジェクトは、**LLM（大規模言語モデル）によって完全に記述されたテストプロジェクト**です。Next.jsとPrismaを使用したTodoアプリケーションの開発を通じて、LLMの開発能力を検証しています。
 
-現在は基本的なTodo管理機能を実装し、以下の特徴があります：
+現在は基本的なTodo管理機能とプロジェクト管理機能を実装し、以下の特徴があります：
 
+* プロジェクトベースのTodo管理システム
 * カラーコード化されたラベルシステム
 * 多対多関係によるマルチラベル対応
+* ユーザー認証とプロジェクト連携
 * 包括的なAPIテスト
 * Docker環境での開発
 
@@ -71,7 +73,10 @@ docker compose exec app npm run db:studio
 
 ## 🧱 実装済み機能
 
-### ✅ 基本Todo機能
+### ✅ プロジェクト・Todo機能
+* [x] プロジェクト作成・編集・削除
+* [x] プロジェクト一覧表示
+* [x] プロジェクト別Todo管理
 * [x] Todo作成・編集・削除
 * [x] Todo一覧表示
 * [x] 完了状態の切り替え
@@ -118,11 +123,14 @@ docker compose exec app npm run db:studio
 ├── app/
 │   ├── api/                    # API Routes
 │   │   ├── __tests__/         # テストユーティリティ
-│   │   ├── auth/              # 認証API（ログイン）
+│   │   ├── auth/              # 認証API（ログイン・登録）
 │   │   ├── users/             # ユーザー管理API
+│   │   ├── projects/          # プロジェクト管理API
 │   │   ├── todos/             # Todo API
 │   │   └── labels/            # ラベル API
 │   ├── components/            # React コンポーネント
+│   ├── projects/              # プロジェクト関連ページ
+│   │   └── [id]/todos/       # プロジェクト別Todo管理
 │   ├── lib/                   # ユーティリティ（パスワード処理含む）
 │   ├── types/                 # TypeScript型定義
 │   ├── login/                 # ログインページ
@@ -137,42 +145,6 @@ docker compose exec app npm run db:studio
 └── docker-compose.yml        # Docker設定
 ```
 
-## 🔍 データベーススキーマ
-
-```prisma
-model User {
-  id            Int      @id @default(autoincrement())
-  email         String   @unique
-  name          String?
-  password      String
-  todos         Todo[]
-  createdTodos  Todo[]   @relation("TodoCreatedBy")
-  assignedTodos Todo[]   @relation("TodoAssignedTo")
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-}
-
-model Todo {
-  id          Int      @id @default(autoincrement())
-  title       String
-  description String?
-  completed   Boolean  @default(false)
-  labels      Label[]  @relation("TodoLabels")
-  createdBy   User?    @relation("TodoCreatedBy", fields: [createdById], references: [id])
-  createdById Int?
-  assignedTo  User?    @relation("TodoAssignedTo", fields: [assignedToId], references: [id])
-  assignedToId Int?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-}
-
-model Label {
-  id    Int     @id @default(autoincrement())
-  name  String  @unique
-  color String
-  todos Todo[]  @relation("TodoLabels")
-}
-```
 
 ## 🚀 今後の拡張予定
 
@@ -184,9 +156,10 @@ model Label {
 
 ### 📊 拡張機能
 * [ ] 作業履歴カレンダー
-* [ ] プロジェクト管理
 * [ ] 統計・レポート機能
 * [ ] CSV/JSONエクスポート
+* [ ] プロジェクト招待機能（招待されたユーザーのみがアクセス可能なプライベート対応）
+* [ ] チーム・コラボレーション機能
 
 ### 🔐 セキュリティ
 * [ ] 認証・認可
