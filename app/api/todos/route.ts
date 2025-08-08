@@ -17,11 +17,24 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const currentUserId = searchParams.get('currentUserId');
     const projectId = searchParams.get('projectId');
+    const assignedToId = searchParams.get('assignedToId');
+    const createdById = searchParams.get('createdById');
+    let whereCondition: any = {};
     
+    if (projectId) {
+      whereCondition.projectId = parseInt(projectId);
+    }
+    
+    if (assignedToId) {
+      whereCondition.assignedToId = parseInt(assignedToId);
+    }
+    
+    if (createdById) {
+      whereCondition.createdById = parseInt(createdById);
+    }
+
     const todos = await prisma.todo.findMany({
-      where: projectId ? {
-        projectId: parseInt(projectId)
-      } : {},
+      where: whereCondition,
       include: {
         createdBy: {
           select: {
