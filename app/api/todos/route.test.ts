@@ -211,6 +211,7 @@ describe('Todo API', () => {
         body: JSON.stringify({
           title: '新しいTodo',
           description: '説明',
+          projectId: 1,
         }),
       });
 
@@ -230,6 +231,7 @@ describe('Todo API', () => {
           description: '説明',
           createdById: undefined,
           assignedToId: undefined,
+          projectId: 1,
           labels: undefined,
         },
         include: {
@@ -250,6 +252,21 @@ describe('Todo API', () => {
           labels: {
             include: {
               label: true,
+            },
+          },
+          project: {
+            select: {
+              id: true,
+              name: true,
+              description: true,
+              color: true,
+              createdBy: {
+                select: {
+                  id: true,
+                  name: true,
+                  email: true,
+                },
+              },
             },
           },
         },
@@ -302,6 +319,7 @@ describe('Todo API', () => {
           title: 'ラベル付きTodo',
           description: 'ラベルが割り当てられたTodo',
           createdById: 1,
+          projectId: 1,
           labelIds: [1, 2],
         }),
       });
@@ -322,6 +340,7 @@ describe('Todo API', () => {
           description: 'ラベルが割り当てられたTodo',
           createdById: 1,
           assignedToId: undefined,
+          projectId: 1,
           labels: {
             create: [
               { labelId: 1 },
@@ -347,6 +366,21 @@ describe('Todo API', () => {
           labels: {
             include: {
               label: true,
+            },
+          },
+          project: {
+            select: {
+              id: true,
+              name: true,
+              description: true,
+              color: true,
+              createdBy: {
+                select: {
+                  id: true,
+                  name: true,
+                  email: true,
+                },
+              },
             },
           },
         },
@@ -391,6 +425,7 @@ describe('Todo API', () => {
           description: 'ユーザーが割り当てられたTodo',
           createdById: 1,
           assignedToId: 2,
+          projectId: 1,
         }),
       });
 
@@ -410,6 +445,7 @@ describe('Todo API', () => {
           description: 'ユーザーが割り当てられたTodo',
           createdById: 1,
           assignedToId: 2,
+          projectId: 1,
           labels: undefined,
         },
         include: {
@@ -430,6 +466,21 @@ describe('Todo API', () => {
           labels: {
             include: {
               label: true,
+            },
+          },
+          project: {
+            select: {
+              id: true,
+              name: true,
+              description: true,
+              color: true,
+              createdBy: {
+                select: {
+                  id: true,
+                  name: true,
+                  email: true,
+                },
+              },
             },
           },
         },
@@ -477,6 +528,7 @@ describe('Todo API', () => {
           description: 'ラベルとユーザー割り当ての両方を含むTodo',
           createdById: 1,
           assignedToId: 2,
+          projectId: 1,
           labelIds: [1],
         }),
       });
@@ -497,6 +549,7 @@ describe('Todo API', () => {
           description: 'ラベルとユーザー割り当ての両方を含むTodo',
           createdById: 1,
           assignedToId: 2,
+          projectId: 1,
           labels: {
             create: [
               { labelId: 1 }
@@ -521,6 +574,21 @@ describe('Todo API', () => {
           labels: {
             include: {
               label: true,
+            },
+          },
+          project: {
+            select: {
+              id: true,
+              name: true,
+              description: true,
+              color: true,
+              createdBy: {
+                select: {
+                  id: true,
+                  name: true,
+                  email: true,
+                },
+              },
             },
           },
         },
@@ -569,6 +637,7 @@ describe('Todo API', () => {
           title: '空ラベルTodo',
           description: '空のラベル配列を持つTodo',
           createdById: 1,
+          projectId: 1,
           labelIds: [],
         }),
       });
@@ -584,6 +653,7 @@ describe('Todo API', () => {
           description: '空のラベル配列を持つTodo',
           createdById: 1,
           assignedToId: undefined,
+          projectId: 1,
           labels: undefined,
         },
         include: {
@@ -606,6 +676,21 @@ describe('Todo API', () => {
               label: true,
             },
           },
+          project: {
+            select: {
+              id: true,
+              name: true,
+              description: true,
+              color: true,
+              createdBy: {
+                select: {
+                  id: true,
+                  name: true,
+                  email: true,
+                },
+              },
+            },
+          },
         },
       });
       expect(data.labels).toEqual([]);
@@ -621,6 +706,7 @@ describe('Todo API', () => {
         body: JSON.stringify({
           title: '新しいTodo',
           description: '説明',
+          projectId: 1,
         }),
       });
 

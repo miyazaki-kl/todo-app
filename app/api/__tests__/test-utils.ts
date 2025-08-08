@@ -316,8 +316,24 @@ export const PrismaQueries = {
           label: true,
         },
       },
+      project: {
+        select: {
+          id: true,
+          name: true,
+          description: true,
+          color: true,
+          createdBy: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+            },
+          },
+        },
+      },
     },
     orderBy: { createdAt: 'desc' as const },
+    where: {},
   },
 
   LABEL_ORDER_BY_NAME: {
