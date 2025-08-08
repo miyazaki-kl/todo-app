@@ -2,8 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/app/lib/prisma';
 import { verifyPassword, hashPassword } from '@/app/lib/password';
 import { validatePassword } from '@/app/lib/password-validation';
+import { withAuth } from '@/app/lib/auth-middleware';
 
-export async function PUT(request: NextRequest) {
+export const PUT = withAuth(async (request: NextRequest, user) => {
   try {
     const body = await request.json();
     const { userId, currentPassword, newPassword } = body;
@@ -102,4 +103,4 @@ export async function PUT(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+})

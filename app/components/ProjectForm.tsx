@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useCreateProject, useUpdateProject, useDeleteProject } from '@/app/hooks/useProject';
 import { Project } from '@/app/types/todo';
+import { apiClient } from '@/app/lib/api-client';
 
 interface ProjectFormProps {
   onProjectCreated?: () => void;
@@ -49,21 +50,13 @@ export default function ProjectForm({
     try {
       if (isEditMode && projectId) {
         // 編集モード
-        const response = await fetch(`/api/projects/${projectId}`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            name,
-            description: description || null,
-            color,
-          }),
+        await apiClient.put(`/api/projects/${projectId}`, {
+          name,
+          description: description || null,
+          color,
         });
 
-        if (!response.ok) {
-          throw new Error('プロジェクトの更新に失敗しました');
-        }
+        
 
         if (onProjectUpdated) {
           onProjectUpdated();
@@ -81,22 +74,14 @@ export default function ProjectForm({
           }
         }
 
-        const response = await fetch('/api/projects', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            name,
-            description: description || null,
-            color,
-            createdById,
-          }),
+        await apiClient.post('/api/projects', {
+          name,
+          description: description || null,
+          color,
+          createdById,
         });
 
-        if (!response.ok) {
-          throw new Error('プロジェクトの作成に失敗しました');
-        }
+        
 
         // フォームをリセット
         setName('');
@@ -120,13 +105,9 @@ export default function ProjectForm({
 
     setIsDeleting(true);
     try {
-      const response = await fetch(`/api/projects/${projectId}`, {
-        method: 'DELETE',
-      });
+      await apiClient.delete(`/api/projects/${projectId}`);
 
-      if (!response.ok) {
-        throw new Error('プロジェクトの削除に失敗しました');
-      }
+      
 
       if (onProjectDeleted) {
         onProjectDeleted(projectId);

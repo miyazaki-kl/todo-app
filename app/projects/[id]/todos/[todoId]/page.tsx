@@ -6,6 +6,7 @@ import { useRouter, useParams } from 'next/navigation';
 import { Todo, Project } from '@/app/types/todo';
 import LabelBadge from '@/app/components/LabelBadge';
 import ProjectBadge from '@/app/components/ProjectBadge';
+import { apiClient } from '@/app/lib/api-client';
 
 export default function ProjectTodoDetail() {
   const [todo, setTodo] = useState<Todo | null>(null);
@@ -20,11 +21,8 @@ export default function ProjectTodoDetail() {
 
   const fetchProject = async () => {
     try {
-      const response = await fetch(`/api/projects/${projectId}`);
-      if (!response.ok) {
-        throw new Error('プロジェクトの取得に失敗しました');
-      }
-      const data = await response.json();
+      const data = await apiClient.get<Project>(`/api/projects/${projectId}`);
+      
       setProject(data);
     } catch (error) {
       console.error('Error:', error);
@@ -34,11 +32,7 @@ export default function ProjectTodoDetail() {
 
   const fetchTodo = async () => {
     try {
-      const response = await fetch(`/api/todos/${todoId}`);
-      if (!response.ok) {
-        throw new Error('Todoの取得に失敗しました');
-      }
-      const data = await response.json();
+      const data = await apiClient.get<Todo>(`/api/todos/${todoId}`);
       
       // プロジェクトIDが一致しない場合はエラー
       if (data.projectId !== parseInt(projectId)) {
@@ -59,22 +53,12 @@ export default function ProjectTodoDetail() {
     if (!todo) return;
 
     try {
-      const response = await fetch(`/api/todos/${todo.id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          ...todo,
-          completed: !todo.completed,
-        }),
+      const updatedTodo = await apiClient.put<Todo>(`/api/todos/${todo.id}`, {
+        ...todo,
+        completed: !todo.completed,
       });
 
-      if (!response.ok) {
-        throw new Error('Todo更新に失敗しました');
-      }
-
-      const updatedTodo = await response.json();
+      
       setTodo(updatedTodo);
     } catch (error) {
       console.error('Error:', error);
@@ -90,13 +74,9 @@ export default function ProjectTodoDetail() {
     }
 
     try {
-      const response = await fetch(`/api/todos/${todo.id}`, {
-        method: 'DELETE',
-      });
+      await apiClient.delete(`/api/todos/${todo.id}`);
 
-      if (!response.ok) {
-        throw new Error('Todo削除に失敗しました');
-      }
+      
 
       alert('Todoを削除しました');
       router.push(`/projects/${projectId}/todos`);

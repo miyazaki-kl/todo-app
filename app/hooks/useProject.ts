@@ -16,12 +16,12 @@ export interface UpdateProjectData extends CreateProjectData {
 }
 
 export function useProjects() {
-  return useApiData<Project[]>('/projects');
+  return useApiData<Project[]>('/api/projects');
 }
 
 export function useProject(id: number | null) {
   return useApiData<Project>(
-    id ? `/projects/${id}` : '',
+    id ? `/api/projects/${id}` : '',
     { enabled: !!id }
   );
 }
@@ -30,7 +30,7 @@ export function useCreateProject() {
   return useApiMutation<Project, CreateProjectData>(
     async (data) => {
       const createdById = getCurrentUserId();
-      return apiClient.post<Project>('/projects', {
+      return apiClient.post<Project>('/api/projects', {
         ...data,
         color: data.color || 'blue',
         createdById,
@@ -42,7 +42,7 @@ export function useCreateProject() {
 export function useUpdateProject() {
   return useApiMutation<Project, UpdateProjectData>(
     async ({ id, ...data }) => {
-      return apiClient.put<Project>(`/projects/${id}`, data);
+      return apiClient.put<Project>(`/api/projects/${id}`, data);
     }
   );
 }
@@ -50,7 +50,7 @@ export function useUpdateProject() {
 export function useDeleteProject() {
   return useApiMutation<void, number>(
     async (id) => {
-      return apiClient.delete<void>(`/projects/${id}`);
+      return apiClient.delete<void>(`/api/projects/${id}`);
     }
   );
 }

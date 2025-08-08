@@ -35,14 +35,14 @@ export function useTodos(filters: TodoFilters = {}) {
   });
 
   const queryString = params.toString();
-  const endpoint = queryString ? `/todos?${queryString}` : '/todos';
+  const endpoint = queryString ? `/api/todos?${queryString}` : '/api/todos';
 
   return useApiData<Todo[]>(endpoint);
 }
 
 export function useTodo(id: number | null) {
   return useApiData<Todo>(
-    id ? `/todos/${id}` : '',
+    id ? `/api/todos/${id}` : '',
     { enabled: !!id }
   );
 }
@@ -51,7 +51,7 @@ export function useCreateTodo() {
   return useApiMutation<Todo, CreateTodoData>(
     async (data) => {
       const createdById = getCurrentUserId();
-      return apiClient.post<Todo>('/todos', {
+      return apiClient.post<Todo>('/api/todos', {
         ...data,
         createdById,
       });
@@ -62,7 +62,7 @@ export function useCreateTodo() {
 export function useUpdateTodo() {
   return useApiMutation<Todo, UpdateTodoData>(
     async ({ id, ...data }) => {
-      return apiClient.put<Todo>(`/todos/${id}`, data);
+      return apiClient.put<Todo>(`/api/todos/${id}`, data);
     }
   );
 }
@@ -70,7 +70,7 @@ export function useUpdateTodo() {
 export function useToggleTodoComplete() {
   return useApiMutation<Todo, { todo: Todo }>(
     async ({ todo }) => {
-      return apiClient.put<Todo>(`/todos/${todo.id}`, {
+      return apiClient.put<Todo>(`/api/todos/${todo.id}`, {
         ...todo,
         completed: !todo.completed,
       });
@@ -81,7 +81,7 @@ export function useToggleTodoComplete() {
 export function useDeleteTodo() {
   return useApiMutation<void, number>(
     async (id) => {
-      return apiClient.delete<void>(`/todos/${id}`);
+      return apiClient.delete<void>(`/api/todos/${id}`);
     }
   );
 }

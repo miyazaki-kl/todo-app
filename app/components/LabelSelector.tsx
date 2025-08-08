@@ -10,7 +10,7 @@ interface LabelSelectorProps {
 }
 
 export default function LabelSelector({ selectedLabelIds, onLabelsChange }: LabelSelectorProps) {
-  const { data: availableLabels, isLoading, error } = useApiData<Label[]>('/labels');
+  const { data: availableLabels, isLoading, error } = useApiData<Label[]>('/api/labels');
 
   const handleLabelToggle = (labelId: number) => {
     if (selectedLabelIds.includes(labelId)) {

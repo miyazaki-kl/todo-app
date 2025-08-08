@@ -1,8 +1,9 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/app/lib/prisma';
+import { withAuth } from '@/app/lib/auth-middleware';
 
 // GET /api/labels - すべてのラベルを取得
-export async function GET() {
+export const GET = withAuth(async (request: NextRequest, user) => {
   try {
     const labels = await prisma.label.findMany({
       orderBy: {
@@ -13,4 +14,4 @@ export async function GET() {
   } catch (error) {
     return NextResponse.json({ error: 'ラベルの取得に失敗しました' }, { status: 500 });
   }
-}
+})

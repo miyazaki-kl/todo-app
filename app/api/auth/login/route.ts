@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/app/lib/prisma';
 import { verifyPassword } from '@/app/lib/password';
+import { generateToken } from '@/app/lib/jwt';
 
 export async function POST(request: NextRequest) {
   try {
@@ -54,6 +55,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // JWTトークンを生成
+    const token = generateToken({
+      userId: user.id,
+      email: user.email,
+      name: user.name,
+    });
+
     // 認証成功
     console.log('ログイン成功:', { userId: user.id, email: user.email });
     
@@ -61,6 +69,7 @@ export async function POST(request: NextRequest) {
       {
         success: true,
         message: 'ログインに成功しました',
+        token,
         user: {
           id: user.id,
           email: user.email,
