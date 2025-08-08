@@ -151,8 +151,6 @@ docker compose exec app npm run db:studio
 ### 📋 ユーザー管理
 * [ ] ユーザー登録機能
 * [ ] サーバーサイドセッション管理
-* [ ] 認証ミドルウェア
-* [ ] JWTトークン認証
 
 ### 📊 拡張機能
 * [ ] 作業履歴カレンダー
@@ -162,7 +160,6 @@ docker compose exec app npm run db:studio
 * [ ] チーム・コラボレーション機能
 
 ### 🔐 セキュリティ
-* [ ] 認証・認可
 * [ ] CSRF対策
 * [ ] XSS対策
 
