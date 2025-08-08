@@ -90,7 +90,9 @@ export default function TodoForm({
         onTodoCreated();
       }
     } catch (error) {
-      // エラーはフック内でハンドルされる
+      console.error('Todo操作エラー:', error);
+      // フック内でエラー状態とメッセージが管理されているため、追加の処理は不要
+      // デバッグとモニタリングのためログを出力
     }
   };
 
@@ -101,7 +103,9 @@ export default function TodoForm({
       await deleteTodo.mutate(parseInt(todoId));
       onTodoDeleted?.(todoId);
     } catch (error) {
-      // エラーはフック内でハンドルされる
+      console.error('Todo操作エラー:', error);
+      // フック内でエラー状態とメッセージが管理されているため、追加の処理は不要
+      // デバッグとモニタリングのためログを出力
     }
   };
 
@@ -143,7 +147,7 @@ export default function TodoForm({
           className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
         >
           <option value="">担当者なし</option>
-          {users.map((user) => (
+          {users?.map((user) => (
             <option key={user.id} value={user.id}>
               {user.name || user.email}
             </option>
@@ -176,13 +180,28 @@ export default function TodoForm({
         selectedLabelIds={labelIds}
         onLabelsChange={setLabelIds}
       />
+      
+      {/* エラー表示 */}
+      {(createTodo.error || updateTodo.error || deleteTodo.error) && (
+        <div className="rounded-md bg-red-50 p-4">
+          <div className="flex">
+            <div className="ml-3">
+              <h3 className="text-sm font-medium text-red-800">エラーが発生しました</h3>
+              <div className="mt-2 text-sm text-red-700">
+                {createTodo.error || updateTodo.error || deleteTodo.error}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      
       <div className="flex space-x-4">
         <button
           type="submit"
           disabled={createTodo.isLoading || updateTodo.isLoading}
           className="inline-flex justify-center rounded-md border border-transparent bg-indigo-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50"
         >
-{isLoading ? (isEditMode ? '更新中...' : '作成中...') : (isEditMode ? 'Todoを更新' : 'Todoを作成')}
+{(createTodo.isLoading || updateTodo.isLoading) ? (isEditMode ? '更新中...' : '作成中...') : (isEditMode ? 'Todoを更新' : 'Todoを作成')}
         </button>
         {onCancel && (
           <button
