@@ -13,8 +13,10 @@ interface User {
 
 interface TodoFormProps {
   onTodoCreated: () => void;
+  onCancel?: () => void;
   onTodoDeleted?: (id: string) => void;
   todoId?: string;
+  projectId?: number;
   initialData?: {
     title: string;
     description: string;
@@ -29,8 +31,10 @@ interface TodoFormProps {
 
 export default function TodoForm({ 
   onTodoCreated, 
+  onCancel,
   onTodoDeleted, 
-  todoId, 
+  todoId,
+  projectId,
   initialData, 
   isEditMode = false, 
   onTodoUpdated 
@@ -38,7 +42,9 @@ export default function TodoForm({
   const [title, setTitle] = useState(initialData?.title || '');
   const [description, setDescription] = useState(initialData?.description || '');
   const [assignedToId, setAssignedToId] = useState<number | null>(initialData?.assignedToId || null);
-  const [projectId, setProjectId] = useState<number | null>(initialData?.projectId || null);
+  const [formProjectId, setFormProjectId] = useState<number | null>(
+    projectId || initialData?.projectId || null
+  );
   const [completed, setCompleted] = useState(initialData?.completed || false);
   const [labelIds, setLabelIds] = useState<number[]>(initialData?.labelIds || []);
   const [users, setUsers] = useState<User[]>([]);
@@ -78,7 +84,7 @@ export default function TodoForm({
             title, 
             description, 
             assignedToId: assignedToId || null,
-            projectId: projectId || null,
+            projectId: formProjectId || null,
             completed: completed,
             labelIds: labelIds
           }),
@@ -114,7 +120,7 @@ export default function TodoForm({
             description, 
             createdById,
             assignedToId: assignedToId || null,
-            projectId: projectId || null,
+            projectId: formProjectId || null,
             labelIds: labelIds
           }),
         });
@@ -126,7 +132,9 @@ export default function TodoForm({
         setTitle('');
         setDescription('');
         setAssignedToId(null);
-        setProjectId(null);
+        if (!projectId) {
+          setFormProjectId(null);
+        }
         setCompleted(false);
         setLabelIds([]);
         onTodoCreated();
@@ -224,10 +232,12 @@ export default function TodoForm({
           </select>
         </div>
       )}
-      <ProjectSelector
-        selectedProjectId={projectId}
-        onProjectChange={setProjectId}
-      />
+      {!projectId && (
+        <ProjectSelector
+          selectedProjectId={formProjectId}
+          onProjectChange={setFormProjectId}
+        />
+      )}
       <LabelSelector
         selectedLabelIds={labelIds}
         onLabelsChange={setLabelIds}
@@ -240,6 +250,15 @@ export default function TodoForm({
         >
 {isLoading ? (isEditMode ? '更新中...' : '作成中...') : (isEditMode ? 'Todoを更新' : 'Todoを作成')}
         </button>
+        {onCancel && (
+          <button
+            type="button"
+            onClick={onCancel}
+            className="inline-flex justify-center rounded-md border border-gray-300 bg-white py-2 px-4 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+          >
+            キャンセル
+          </button>
+        )}
         {todoId && (
           <button
             type="button"

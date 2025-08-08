@@ -52,6 +52,7 @@ describe('Todo API (特定のID)', () => {
           description: '更新された説明',
           completed: true,
           assignedToId: undefined,
+          projectId: undefined,
           labels: undefined,
         },
         include: {
@@ -67,6 +68,21 @@ describe('Todo API (特定のID)', () => {
               id: true,
               name: true,
               email: true,
+            },
+          },
+          project: {
+            select: {
+              id: true,
+              name: true,
+              description: true,
+              color: true,
+              createdBy: {
+                select: {
+                  id: true,
+                  name: true,
+                  email: true,
+                },
+              },
             },
           },
           labels: {

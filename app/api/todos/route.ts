@@ -16,8 +16,12 @@ export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const currentUserId = searchParams.get('currentUserId');
+    const projectId = searchParams.get('projectId');
     
     const todos = await prisma.todo.findMany({
+      where: projectId ? {
+        projectId: parseInt(projectId)
+      } : {},
       include: {
         createdBy: {
           select: {
@@ -83,6 +87,13 @@ export async function POST(request: Request) {
     if (!title) {
       return NextResponse.json(
         { error: 'タイトルは必須です' },
+        { status: 400 }
+      );
+    }
+
+    if (!projectId) {
+      return NextResponse.json(
+        { error: 'プロジェクトIDは必須です' },
         { status: 400 }
       );
     }
