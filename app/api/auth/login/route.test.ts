@@ -46,6 +46,15 @@ describe('Authentication API - /api/auth/login', () => {
       email: 'test@example.com',
       name: 'Test User',
       password: '$2a$12$hashedpassword',
+      isAdmin: false,
+    });
+
+    const mockAdminUser = MockData.user({
+      id: 2,
+      email: 'admin@example.com',
+      name: 'Admin User',
+      password: '$2a$12$hashedpassword',
+      isAdmin: true,
     });
 
     // Requirement 1.1: Valid email and password should return successful login response
@@ -75,6 +84,7 @@ describe('Authentication API - /api/auth/login', () => {
           id: 1,
           email: 'test@example.com',
           name: 'Test User',
+          isAdmin: false,
         }),
         token: expect.any(String),
       });
@@ -294,7 +304,75 @@ describe('Authentication API - /api/auth/login', () => {
         id: 1,
         email: 'test@example.com',
         name: 'Test User',
+        isAdmin: false,
       });
+    });
+
+    // Test admin user login includes isAdmin flag
+    it('管理者ユーザーでログイン時にisAdminフラグが含まれる', async () => {
+      mockPrisma.user.findUnique.mockResolvedValue(mockAdminUser);
+      mockVerifyPassword.mockResolvedValue(true);
+
+      const { POST } = require('./route');
+      const request = createMockNextRequest('http://localhost:3000/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: 'admin@example.com',
+          password: 'adminpassword',
+        }),
+      });
+
+      const response = await POST(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(200);
+      expect(data).toMatchObject({
+        success: true,
+        message: 'ログインに成功しました',
+        user: MockData.userWithoutPassword({
+          id: 2,
+          email: 'admin@example.com',
+          name: 'Admin User',
+          isAdmin: true,
+        }),
+        token: expect.any(String),
+      });
+
+      // JWTトークンにisAdminフラグが含まれていることを確認
+      const { verifyToken } = require('@/app/lib/jwt');
+      const decoded = verifyToken(data.token);
+      expect(decoded.isAdmin).toBe(true);
+      expect(decoded.userId).toBe(2);
+      expect(decoded.email).toBe('admin@example.com');
+    });
+
+    it('一般ユーザーでログイン時にisAdminフラグがfalse', async () => {
+      mockPrisma.user.findUnique.mockResolvedValue(mockUser);
+      mockVerifyPassword.mockResolvedValue(true);
+
+      const { POST } = require('./route');
+      const request = createMockNextRequest('http://localhost:3000/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: 'test@example.com',
+          password: 'userpassword',
+        }),
+      });
+
+      const response = await POST(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(200);
+      expect(data.user.isAdmin).toBe(false);
+
+      // JWTトークンにisAdminフラグがfalseで含まれていることを確認
+      const { verifyToken } = require('@/app/lib/jwt');
+      const decoded = verifyToken(data.token);
+      expect(decoded.isAdmin).toBe(false);
+      expect(decoded.userId).toBe(1);
+      expect(decoded.email).toBe('test@example.com');
     });
   });
 });

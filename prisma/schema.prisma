@@ -12,6 +12,7 @@ model User {
   email       String   @unique
   name        String?
   password    String
+  isAdmin     Boolean  @default(false)
   todos       Todo[]
   createdTodos Todo[]   @relation("TodoCreatedBy")
   assignedTodos Todo[]  @relation("TodoAssignedTo")

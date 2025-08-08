@@ -17,6 +17,7 @@ export interface TokenPayload {
   userId: number;
   email: string;
   name: string | null;
+  isAdmin?: boolean;
 }
 
 export interface DecodedToken extends TokenPayload {
