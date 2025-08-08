@@ -56,3 +56,6 @@ Thumbs.db
 # work log
 work_log.txt
 screenshots/
+
+# Serena MCP cache
+.serena/cache/
