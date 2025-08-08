@@ -9,6 +9,7 @@ import {
   ErrorResponses,
   PrismaQueries,
   DatabaseErrors,
+  mockWithAuth
 } from '../../__tests__/test-utils';
 import { verifyPassword } from '@/app/lib/password';
 
@@ -30,6 +31,10 @@ describe('Authentication API - /api/auth/login', () => {
 
   // Use standardized test setup
   setupApiTest(mockPrisma);
+  
+  beforeEach(() => {
+    mockWithAuth();
+  });
 
   beforeEach(() => {
     mockVerifyPassword = verifyPassword as jest.MockedFunction<typeof verifyPassword>;
@@ -60,7 +65,10 @@ describe('Authentication API - /api/auth/login', () => {
 
       const response = await POST(request);
 
-      await assertApiResponse(response, HttpStatus.OK, {
+      const data = await response.json();
+      
+      expect(response.status).toBe(HttpStatus.OK);
+      expect(data).toMatchObject({
         success: true,
         message: 'ログインに成功しました',
         user: MockData.userWithoutPassword({
@@ -68,6 +76,7 @@ describe('Authentication API - /api/auth/login', () => {
           email: 'test@example.com',
           name: 'Test User',
         }),
+        token: expect.any(String),
       });
       expect(mockPrisma.user.findUnique).toHaveBeenCalledWith({
         where: { email: 'test@example.com' },

@@ -9,6 +9,8 @@ import {
   ErrorResponses,
   PrismaQueries,
   DatabaseErrors,
+  createAuthenticatedMockRequest,
+  mockWithAuth
 } from '../__tests__/test-utils';
 
 // Create standardized mock Prisma client
@@ -20,6 +22,10 @@ const mockPrisma = createMockPrismaClient();
 describe('Todo API', () => {
   // Use standardized test setup
   setupApiTest(mockPrisma);
+  
+  beforeEach(() => {
+    mockWithAuth();
+  });
 
   describe('GET /api/todos', () => {
     it('すべてのTodoを取得できる', async () => {
@@ -47,7 +53,7 @@ describe('Todo API', () => {
       mockPrisma.todo.findMany.mockResolvedValue(mockDbTodos);
 
       const { GET } = require('./route');
-      const request = new Request('http://localhost:3000/api/todos');
+      const request = createAuthenticatedMockRequest('http://localhost:3000/api/todos');
       const response = await GET(request);
 
       await assertApiResponse(response, HttpStatus.OK, convertDatesToISOStrings(mockDbTodos));
@@ -98,7 +104,7 @@ describe('Todo API', () => {
       (mockPrisma.todo.findMany as jest.Mock).mockResolvedValue(mockDbTodos);
 
       const { GET } = require('./route');
-      const request = new Request('http://localhost:3000/api/todos?currentUserId=1');
+      const request = createAuthenticatedMockRequest('http://localhost:3000/api/todos?currentUserId=1');
       const response = await GET(request);
       const data = await response.json();
 
@@ -140,7 +146,7 @@ describe('Todo API', () => {
       (mockPrisma.todo.findMany as jest.Mock).mockResolvedValue(mockDbTodos);
 
       const { GET } = require('./route');
-      const request = new Request('http://localhost:3000/api/todos');
+      const request = createAuthenticatedMockRequest('http://localhost:3000/api/todos');
       const response = await GET(request);
       const data = await response.json();
 
@@ -180,7 +186,7 @@ describe('Todo API', () => {
       mockPrisma.todo.findMany.mockRejectedValue(DatabaseErrors.CONNECTION_FAILED);
       
       const { GET } = require('./route');
-      const request = new Request('http://localhost:3000/api/todos');
+      const request = createAuthenticatedMockRequest('http://localhost:3000/api/todos');
       const response = await GET(request);
 
       await assertApiResponse(response, HttpStatus.INTERNAL_SERVER_ERROR, ErrorResponses.SERVER_ERROR('Todoの取得に失敗しました'));
@@ -205,9 +211,8 @@ describe('Todo API', () => {
       (mockPrisma.todo.create as jest.Mock).mockResolvedValue(mockTodo);
 
       const { POST } = require('./route');
-      const request = new Request('http://localhost:3000/api/todos', {
+      const request = createAuthenticatedMockRequest('http://localhost:3000/api/todos', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           title: '新しいTodo',
           description: '説明',
@@ -275,9 +280,8 @@ describe('Todo API', () => {
 
     it('タイトルが未指定の場合はエラーを返す', async () => {
       const { POST } = require('./route');
-      const request = new Request('http://localhost:3000/api/todos', {
+      const request = createAuthenticatedMockRequest('http://localhost:3000/api/todos', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           description: '説明',
         }),
@@ -312,9 +316,8 @@ describe('Todo API', () => {
       (mockPrisma.todo.create as jest.Mock).mockResolvedValue(mockTodo);
 
       const { POST } = require('./route');
-      const request = new Request('http://localhost:3000/api/todos', {
+      const request = createAuthenticatedMockRequest('http://localhost:3000/api/todos', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           title: 'ラベル付きTodo',
           description: 'ラベルが割り当てられたTodo',
@@ -417,9 +420,8 @@ describe('Todo API', () => {
       (mockPrisma.todo.create as jest.Mock).mockResolvedValue(mockTodo);
 
       const { POST } = require('./route');
-      const request = new Request('http://localhost:3000/api/todos', {
+      const request = createAuthenticatedMockRequest('http://localhost:3000/api/todos', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           title: 'ユーザー割り当てTodo',
           description: 'ユーザーが割り当てられたTodo',
@@ -520,9 +522,8 @@ describe('Todo API', () => {
       (mockPrisma.todo.create as jest.Mock).mockResolvedValue(mockTodo);
 
       const { POST } = require('./route');
-      const request = new Request('http://localhost:3000/api/todos', {
+      const request = createAuthenticatedMockRequest('http://localhost:3000/api/todos', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           title: '完全なTodo',
           description: 'ラベルとユーザー割り当ての両方を含むTodo',
@@ -630,9 +631,8 @@ describe('Todo API', () => {
       (mockPrisma.todo.create as jest.Mock).mockResolvedValue(mockTodo);
 
       const { POST } = require('./route');
-      const request = new Request('http://localhost:3000/api/todos', {
+      const request = createAuthenticatedMockRequest('http://localhost:3000/api/todos', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           title: '空ラベルTodo',
           description: '空のラベル配列を持つTodo',
@@ -700,9 +700,8 @@ describe('Todo API', () => {
       mockPrisma.todo.create.mockRejectedValue(DatabaseErrors.CONNECTION_FAILED);
       
       const { POST } = require('./route');
-      const request = new Request('http://localhost:3000/api/todos', {
+      const request = createAuthenticatedMockRequest('http://localhost:3000/api/todos', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           title: '新しいTodo',
           description: '説明',

@@ -8,6 +8,8 @@ import {
   ErrorResponses,
   PrismaQueries,
   DatabaseErrors,
+  createAuthenticatedMockRequest,
+  mockWithAuth
 } from '../__tests__/test-utils';
 
 // Create standardized mock Prisma client
@@ -19,6 +21,10 @@ const mockPrisma = createMockPrismaClient();
 describe('Users API', () => {
   // Use standardized test setup
   setupApiTest(mockPrisma);
+  
+  beforeEach(() => {
+    mockWithAuth();
+  });
 
   describe('GET /api/users', () => {
     it('すべてのユーザーを取得できる', async () => {

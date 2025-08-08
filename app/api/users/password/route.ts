@@ -84,7 +84,9 @@ export const PUT = withAuth(async (request: NextRequest, user) => {
       data: { password: hashedNewPassword },
     });
 
-    console.log('パスワード変更成功:', { userId, email: user.email });
+    if (process.env.NODE_ENV === 'development') {
+      console.log('パスワード変更成功:', { userId, email: user.email });
+    }
 
     return NextResponse.json(
       {

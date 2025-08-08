@@ -26,13 +26,17 @@ class ApiClient {
     const token = this.getAuthToken();
     if (token) {
       headers['Authorization'] = `Bearer ${token}`;
-      // デバッグ用ログ
-      console.log('APIクライアント: 認証ヘッダーを設定', {
-        hasToken: true,
-        tokenStart: token.substring(0, 20) + '...'
-      });
+      // デバッグ用ログ（開発環境のみ）
+      if (process.env.NODE_ENV === 'development') {
+        console.log('APIクライアント: 認証ヘッダーを設定', {
+          hasToken: true,
+          tokenStart: token.substring(0, 20) + '...'
+        });
+      }
     } else {
-      console.log('APIクライアント: 認証トークンが見つかりません');
+      if (process.env.NODE_ENV === 'development') {
+        console.log('APIクライアント: 認証トークンが見つかりません');
+      }
     }
 
     return headers;

@@ -8,7 +8,9 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { email, password } = body;
 
-    console.log('ログイン試行:', { email, password: '***' });
+    if (process.env.NODE_ENV === 'development') {
+      console.log('ログイン試行:', { email, password: '***' });
+    }
 
     // 入力値検証
     if (!email || !password) {
@@ -63,7 +65,9 @@ export async function POST(request: NextRequest) {
     });
 
     // 認証成功
-    console.log('ログイン成功:', { userId: user.id, email: user.email });
+    if (process.env.NODE_ENV === 'development') {
+      console.log('ログイン成功:', { userId: user.id, email: user.email });
+    }
     
     return NextResponse.json(
       {
@@ -79,7 +83,9 @@ export async function POST(request: NextRequest) {
       { status: 200 }
     );
   } catch (error) {
-    console.error('ログインAPIエラー:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('ログインAPIエラー:', error);
+    }
     return NextResponse.json(
       {
         success: false,

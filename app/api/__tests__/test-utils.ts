@@ -239,6 +239,42 @@ export function createMockNextRequest(url: string, options: RequestInit = {}): a
 }
 
 /**
+ * 認証トークン付きのモックNextRequestを作成
+ */
+export function createAuthenticatedMockRequest(
+  url: string, 
+  options: RequestInit = {},
+  userId: number = 1
+): any {
+  const { generateToken } = require('../../lib/jwt');
+  const token = generateToken({ userId, email: 'test@example.com' });
+  
+  const headers = new Headers(options.headers || {});
+  headers.set('Authorization', `Bearer ${token}`);
+  headers.set('Content-Type', 'application/json');
+  
+  return createMockNextRequest(url, {
+    ...options,
+    headers: Object.fromEntries(headers.entries())
+  });
+}
+
+/**
+ * テスト環境で withAuth をモックして認証を無効化
+ */
+export function mockWithAuth() {
+  const authModule = require('../../lib/auth-middleware');
+  
+  jest.spyOn(authModule, 'withAuth').mockImplementation((handler: any) => {
+    return (request: any, ...args: any[]) => {
+      // モックユーザーを作成
+      const mockUser = { id: 1, email: 'test@example.com' };
+      return handler(request, mockUser, ...args);
+    };
+  });
+}
+
+/**
  * Helper to assert response properties consistently
  * @param response The response object to test
  * @param expectedStatus Expected HTTP status code

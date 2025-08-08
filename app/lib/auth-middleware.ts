@@ -20,13 +20,14 @@ export async function authenticateRequest(
     const token = extractTokenFromHeader(authHeader);
 
     // デバッグ用ログ
-    console.log('認証チェック:', {
-      hasAuthHeader: !!authHeader,
-      authHeaderStart: authHeader?.substring(0, 20) + '...',
-      hasToken: !!token,
-      tokenStart: token?.substring(0, 20) + '...',
-      url: request.url
-    });
+    if (process.env.NODE_ENV === 'development') {
+      const url = new URL(request.url);
+      console.log('認証チェック:', {
+        hasToken: !!token,
+        url: request.url,
+        pathname: url.pathname
+      });
+    }
 
     if (!token) {
       return {
@@ -43,7 +44,9 @@ export async function authenticateRequest(
       user: decoded,
     };
   } catch (error) {
-    console.log('認証エラー:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.log('認証エラー:', error);
+    }
     return {
       authenticated: false,
       error: error instanceof Error ? error.message : '認証に失敗しました',
