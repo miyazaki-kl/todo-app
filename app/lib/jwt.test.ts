@@ -3,7 +3,12 @@ import { generateToken, verifyToken, extractTokenFromHeader } from './jwt';
 describe('JWTライブラリ', () => {
   beforeEach(() => {
     // 環境変数の設定（テスト環境では固定シークレットが使用される）
-    process.env.NODE_ENV = 'test';
+    if (!process.env.NODE_ENV) {
+      Object.defineProperty(process.env, 'NODE_ENV', {
+        value: 'test',
+        writable: true
+      });
+    }
   });
 
   describe('generateToken', () => {

@@ -64,7 +64,7 @@ describe('管理者認証ミドルウェア', () => {
     const mockHandler = jest.fn();
 
     const wrappedHandler = withAdmin(mockHandler);
-    const response = await wrappedHandler(mockRequest);
+    const response = await wrappedHandler(mockRequest) as Response;
 
     expect(mockHandler).not.toHaveBeenCalled();
     expect(response.status).toBe(403);
@@ -80,7 +80,7 @@ describe('管理者認証ミドルウェア', () => {
     const mockHandler = jest.fn();
 
     const wrappedHandler = withAdmin(mockHandler);
-    const response = await wrappedHandler(mockRequest);
+    const response = await wrappedHandler(mockRequest) as Response;
 
     expect(mockHandler).not.toHaveBeenCalled();
     expect(response.status).toBe(401);
@@ -97,7 +97,7 @@ describe('管理者認証ミドルウェア', () => {
     const mockHandler = jest.fn();
 
     const wrappedHandler = withAdmin(mockHandler);
-    const response = await wrappedHandler(mockRequest);
+    const response = await wrappedHandler(mockRequest) as Response;
 
     expect(mockHandler).not.toHaveBeenCalled();
     expect(response.status).toBe(401);
@@ -120,7 +120,7 @@ describe('管理者認証ミドルウェア', () => {
     const mockHandler = jest.fn();
 
     const wrappedHandler = withAdmin(mockHandler);
-    const response = await wrappedHandler(mockRequest);
+    const response = await wrappedHandler(mockRequest) as Response;
 
     expect(mockHandler).not.toHaveBeenCalled();
     expect(response.status).toBe(403);

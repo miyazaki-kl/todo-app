@@ -30,11 +30,7 @@ export default function EditTodoPage() {
 
   const fetchTodo = async () => {
     try {
-      const response = await fetch(`/api/todos/${todoId}`);
-      if (!response.ok) {
-        throw new Error('Todoの取得に失敗しました');
-      }
-      const data = await response.json();
+      const data = await apiClient.get<Todo>(`/api/todos/${todoId}`);
       
       // プロジェクトIDが一致しない場合はエラー
       if (data.projectId !== parseInt(projectId)) {
@@ -175,7 +171,7 @@ export default function EditTodoPage() {
       <div className="bg-white rounded-lg shadow p-6">
         <TodoForm
           projectId={parseInt(projectId)}
-          todoId={parseInt(todoId)}
+          todoId={todoId}
           initialData={{
             title: todo.title,
             description: todo.description || '',
@@ -184,6 +180,7 @@ export default function EditTodoPage() {
             labelIds: todo.labels?.map(label => label.label.id) || []
           }}
           isEditMode={true}
+          onTodoCreated={() => {}} // 編集モードでは使用されない
           onTodoUpdated={handleTodoUpdated}
           onCancel={() => router.push(`/projects/${projectId}/todos/${todoId}`)}
         />

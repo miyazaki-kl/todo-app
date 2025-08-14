@@ -1,6 +1,6 @@
 import jwt from 'jsonwebtoken';
 
-const JWT_SECRET = (() => {
+const JWT_SECRET: string = (() => {
   const secret = process.env.JWT_SECRET;
   if (!secret) {
     // テスト環境では固定シークレットを使用
@@ -11,7 +11,7 @@ const JWT_SECRET = (() => {
   }
   return secret;
 })();
-const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '7d';
+const JWT_EXPIRES_IN: string = process.env.JWT_EXPIRES_IN || '7d';
 
 export interface TokenPayload {
   userId: number;
@@ -33,7 +33,7 @@ export interface DecodedToken extends TokenPayload {
 export function generateToken(payload: TokenPayload): string {
   return jwt.sign(payload, JWT_SECRET, {
     expiresIn: JWT_EXPIRES_IN,
-  });
+  } as jwt.SignOptions);
 }
 
 /**
@@ -48,7 +48,7 @@ export function verifyToken(token: string): DecodedToken {
     return decoded;
   } catch (error) {
     if (error instanceof jwt.TokenExpiredError) {
-      throw new Error('トークンの有効期限が切れています');
+      throw new Error('無効なトークンです');  // 統一して401エラー用メッセージ
     } else if (error instanceof jwt.JsonWebTokenError) {
       throw new Error('無効なトークンです');
     } else {

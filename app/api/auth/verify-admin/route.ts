@@ -13,13 +13,20 @@ export async function GET(request: NextRequest) {
     }
 
     const token = authHeader.substring(7);
-    const decoded = verifyToken(token);
-
-    if (!decoded) {
-      return NextResponse.json(
-        { error: '無効なトークンです' },
-        { status: 401 }
-      );
+    let decoded;
+    
+    try {
+      decoded = verifyToken(token);
+    } catch (tokenError) {
+      // JWT関連エラー（無効なトークン）は401
+      if (tokenError instanceof Error && tokenError.message === '無効なトークンです') {
+        return NextResponse.json(
+          { error: '無効なトークンです' },
+          { status: 401 }
+        );
+      }
+      // それ以外のシステムエラーは500として外側のcatchに渡す
+      throw tokenError;
     }
 
     if (!decoded.isAdmin) {
