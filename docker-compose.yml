@@ -34,7 +34,10 @@ services:
     environment:
       - DATABASE_URL=postgresql://postgres:postgres@db:5432/todo_app
     depends_on:
-      - db
+      db:
+        condition: service_started
+      migrate:
+        condition: service_completed_successfully
     command: sh scripts/migrate-dev.sh
 
   db:
