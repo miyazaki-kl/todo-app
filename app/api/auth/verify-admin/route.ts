@@ -18,10 +18,15 @@ export async function GET(request: NextRequest) {
     try {
       decoded = verifyToken(token);
     } catch (tokenError) {
-      return NextResponse.json(
-        { error: '無効なトークンです' },
-        { status: 401 }
-      );
+      // JWT関連エラー（無効なトークン）は401
+      if (tokenError instanceof Error && tokenError.message === '無効なトークンです') {
+        return NextResponse.json(
+          { error: '無効なトークンです' },
+          { status: 401 }
+        );
+      }
+      // それ以外のシステムエラーは500として外側のcatchに渡す
+      throw tokenError;
     }
 
     if (!decoded.isAdmin) {
