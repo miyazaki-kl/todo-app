@@ -13,9 +13,11 @@ export async function GET(request: NextRequest) {
     }
 
     const token = authHeader.substring(7);
-    const decoded = verifyToken(token);
-
-    if (!decoded) {
+    let decoded;
+    
+    try {
+      decoded = verifyToken(token);
+    } catch (tokenError) {
       return NextResponse.json(
         { error: '無効なトークンです' },
         { status: 401 }

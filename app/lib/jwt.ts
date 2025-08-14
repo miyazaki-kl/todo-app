@@ -31,9 +31,10 @@ export interface DecodedToken extends TokenPayload {
  * @returns 生成されたJWTトークン
  */
 export function generateToken(payload: TokenPayload): string {
-  return jwt.sign(payload, JWT_SECRET as jwt.Secret, {
+  const options: jwt.SignOptions = {
     expiresIn: JWT_EXPIRES_IN,
-  });
+  };
+  return jwt.sign(payload, JWT_SECRET, options);
 }
 
 /**
@@ -44,7 +45,7 @@ export function generateToken(payload: TokenPayload): string {
  */
 export function verifyToken(token: string): DecodedToken {
   try {
-    const decoded = jwt.verify(token, JWT_SECRET as jwt.Secret) as DecodedToken;
+    const decoded = jwt.verify(token, JWT_SECRET) as DecodedToken;
     return decoded;
   } catch (error) {
     if (error instanceof jwt.TokenExpiredError) {
