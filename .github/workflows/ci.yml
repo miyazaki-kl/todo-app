@@ -85,6 +85,9 @@ jobs:
     name: Build Test
     runs-on: ubuntu-latest
 
+    env:
+      JWT_SECRET: test-secret-key-for-ci
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
