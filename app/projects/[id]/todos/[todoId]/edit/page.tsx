@@ -184,6 +184,7 @@ export default function EditTodoPage() {
             labelIds: todo.labels?.map(label => label.label.id) || []
           }}
           isEditMode={true}
+          onTodoCreated={() => {}} // 編集モードでは使用されない
           onTodoUpdated={handleTodoUpdated}
           onCancel={() => router.push(`/projects/${projectId}/todos/${todoId}`)}
         />

@@ -37,7 +37,9 @@ describe('/api/auth/verify-admin', () => {
     });
 
     it('無効なトークンの場合は401を返す', async () => {
-      mockVerifyToken.mockReturnValue(null);
+      mockVerifyToken.mockImplementation(() => {
+        throw new Error('無効なトークンです');
+      });
 
       const request = new NextRequest('http://localhost:3000/api/auth/verify-admin', {
         headers: {

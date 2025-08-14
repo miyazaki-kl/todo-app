@@ -316,6 +316,8 @@ export const PrismaQueries = {
       id: true,
       name: true,
       email: true,
+      isAdmin: true,
+      createdAt: true,
     },
     orderBy: {
       name: 'asc' as const,
