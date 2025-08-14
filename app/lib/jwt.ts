@@ -1,6 +1,6 @@
 import jwt from 'jsonwebtoken';
 
-const JWT_SECRET = (() => {
+const JWT_SECRET: string = (() => {
   const secret = process.env.JWT_SECRET;
   if (!secret) {
     // テスト環境では固定シークレットを使用
@@ -11,7 +11,7 @@ const JWT_SECRET = (() => {
   }
   return secret;
 })();
-const JWT_EXPIRES_IN: string | number = process.env.JWT_EXPIRES_IN || '7d';
+const JWT_EXPIRES_IN: string = process.env.JWT_EXPIRES_IN || '7d';
 
 export interface TokenPayload {
   userId: number;
@@ -31,10 +31,9 @@ export interface DecodedToken extends TokenPayload {
  * @returns 生成されたJWTトークン
  */
 export function generateToken(payload: TokenPayload): string {
-  const options: jwt.SignOptions = {
+  return jwt.sign(payload, JWT_SECRET, {
     expiresIn: JWT_EXPIRES_IN,
-  };
-  return jwt.sign(payload, JWT_SECRET, options);
+  } as jwt.SignOptions);
 }
 
 /**
