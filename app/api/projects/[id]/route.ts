@@ -159,10 +159,9 @@ export const DELETE = withAuth(async (
       );
     }
 
-    // 関連するTodoのプロジェクトIDをnullに設定してから削除
-    await prisma.todo.updateMany({
+    // 関連するTodoを削除
+    await prisma.todo.deleteMany({
       where: { projectId: projectId },
-      data: { projectId: null },
     });
 
     // プロジェクトを削除

@@ -175,7 +175,7 @@ export default function EditTodoPage() {
       <div className="bg-white rounded-lg shadow p-6">
         <TodoForm
           projectId={parseInt(projectId)}
-          todoId={parseInt(todoId)}
+          todoId={todoId}
           initialData={{
             title: todo.title,
             description: todo.description || '',

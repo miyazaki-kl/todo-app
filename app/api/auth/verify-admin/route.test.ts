@@ -56,7 +56,10 @@ describe('/api/auth/verify-admin', () => {
       mockVerifyToken.mockReturnValue({
         userId: 1,
         email: 'user@example.com',
-        isAdmin: false
+        name: 'Test User',
+        isAdmin: false,
+        iat: Date.now(),
+        exp: Date.now() + 3600
       });
 
       const request = new NextRequest('http://localhost:3000/api/auth/verify-admin', {
@@ -76,7 +79,10 @@ describe('/api/auth/verify-admin', () => {
       const mockUserData = {
         userId: 1,
         email: 'admin@example.com',
-        isAdmin: true
+        name: 'Admin User',
+        isAdmin: true,
+        iat: Date.now(),
+        exp: Date.now() + 3600
       };
 
       mockVerifyToken.mockReturnValue(mockUserData);

@@ -201,7 +201,7 @@ export function setupApiTest(mockPrisma: MockPrismaClient) {
     jest.clearAllMocks();
     // Reset all mock implementations
     Object.values(mockPrisma).forEach(model => {
-      Object.values(model).forEach(method => {
+      Object.values(model).forEach((method: any) => {
         method.mockReset();
       });
     });
