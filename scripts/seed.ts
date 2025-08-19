@@ -19,6 +19,7 @@ async function main() {
         email: 'admin@example.com',
         name: '管理者',
         password: hashedAdminPassword,
+        isAdmin: true,  // admin権限を付与
       },
     });
 
@@ -26,6 +27,7 @@ async function main() {
       id: adminUser.id,
       email: adminUser.email,
       name: adminUser.name,
+      isAdmin: adminUser.isAdmin,
     });
   } else {
     console.log('adminユーザーは既に存在します');
@@ -43,6 +45,7 @@ async function main() {
         email: 'test@example.com',
         name: 'テストユーザー',
         password: hashedTestPassword,
+        isAdmin: false,  // 通常ユーザー
       },
     });
 
@@ -50,9 +53,43 @@ async function main() {
       id: newTestUser.id,
       email: newTestUser.email,
       name: newTestUser.name,
+      isAdmin: newTestUser.isAdmin,
     });
   } else {
     console.log('テストユーザーは既に存在します');
+  }
+
+  // サンプルユーザー作成（日本人風の名前）
+  const sampleUsers = [
+    { email: 'yamada@example.com', name: '山田太郎', password: 'yamada' },
+    { email: 'sato@example.com', name: '佐藤花子', password: 'sato' },
+    { email: 'tanaka@example.com', name: '田中次郎', password: 'tanaka' },
+    { email: 'suzuki@example.com', name: '鈴木雪', password: 'suzuki' },
+    { email: 'watanabe@example.com', name: '渡辺寛', password: 'watanabe' },
+  ];
+
+  console.log('サンプルユーザーの作成を開始...');
+  
+  for (const userData of sampleUsers) {
+    const existingUser = await prisma.user.findUnique({
+      where: { email: userData.email },
+    });
+
+    if (!existingUser) {
+      const hashedPassword = await hashPassword(userData.password);
+      const newUser = await prisma.user.create({
+        data: {
+          email: userData.email,
+          name: userData.name,
+          password: hashedPassword,
+          isAdmin: false,
+        },
+      });
+
+      console.log(`ユーザー「${newUser.name}」を作成しました`);
+    } else {
+      console.log(`ユーザー「${userData.name}」は既に存在します`);
+    }
   }
 
   // 初期ラベルデータの作成
