@@ -27,6 +27,7 @@ interface TodoFormProps {
     projectId?: number | null;
     completed?: boolean;
     labelIds?: number[];
+    dueDate?: string | null;
   };
   isEditMode?: boolean;
   onTodoUpdated?: () => void;
@@ -50,6 +51,9 @@ export default function TodoForm({
   );
   const [completed, setCompleted] = useState(initialData?.completed || false);
   const [labelIds, setLabelIds] = useState<number[]>(initialData?.labelIds || []);
+  const [dueDate, setDueDate] = useState<string>(
+    initialData?.dueDate ? initialData.dueDate.split('T')[0] : ''
+  );
   
   // 新しいフックを使用
   const { data: users } = useApiData<User[]>('/api/users');
@@ -68,6 +72,7 @@ export default function TodoForm({
         projectId: formProjectId || null,
         completed,
         labelIds,
+        dueDate: dueDate || null,
       };
 
       if (isEditMode && todoId) {
@@ -87,6 +92,7 @@ export default function TodoForm({
         }
         setCompleted(false);
         setLabelIds([]);
+        setDueDate('');
         onTodoCreated();
       }
     } catch (error) {
@@ -170,6 +176,18 @@ export default function TodoForm({
           </select>
         </div>
       )}
+      <div>
+        <label htmlFor="dueDate" className="block text-sm font-medium text-gray-700">
+          完了予定日
+        </label>
+        <input
+          type="date"
+          id="dueDate"
+          value={dueDate}
+          onChange={(e) => setDueDate(e.target.value)}
+          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+        />
+      </div>
       {!projectId && (
         <ProjectSelector
           selectedProjectId={formProjectId}

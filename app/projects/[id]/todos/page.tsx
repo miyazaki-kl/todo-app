@@ -175,19 +175,33 @@ export default function ProjectTodos() {
           <ul className="space-y-4">
             {todos.map((todo) => {
               const isAssignedToCurrentUser = currentUser && todo.assignedTo?.id === currentUser.id;
+              const isOverdue = todo.dueDate && !todo.completed && new Date(todo.dueDate) < new Date();
+              
+              let backgroundClass = 'bg-white';
+              let borderClass = 'border-gray-200';
+              
+              if (isOverdue) {
+                backgroundClass = 'bg-red-50';
+                borderClass = 'border-red-200';
+              } else if (isAssignedToCurrentUser) {
+                backgroundClass = 'bg-blue-50';
+                borderClass = 'border-blue-200';
+              }
+              
               return (
                 <li
                   key={todo.id}
-                  className={`border rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow ${
-                    isAssignedToCurrentUser 
-                      ? 'bg-blue-50 border-blue-200' 
-                      : 'bg-white'
-                  }`}
+                  className={`border rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow ${backgroundClass} ${borderClass}`}
                 >
                   <div className="cursor-pointer" onClick={() => router.push(`/projects/${projectId}/todos/${todo.id}`)}>
                     <div className="flex items-start justify-between mb-2">
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
+                          {isOverdue && (
+                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                              ⚠️ 期限切れ
+                            </span>
+                          )}
                           {isAssignedToCurrentUser && (
                             <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                               👤 担当中
@@ -224,6 +238,16 @@ export default function ProjectTodos() {
                       <div className="flex gap-4">
                         <span>作成: {new Date(todo.createdAt).toLocaleDateString()}</span>
                         <span>更新: {new Date(todo.updatedAt).toLocaleDateString()}</span>
+                        {todo.dueDate && (
+                          <span className={isOverdue ? 'text-red-600 font-medium' : ''}>
+                            期限: {new Date(todo.dueDate).toLocaleDateString()}
+                          </span>
+                        )}
+                        {todo.completedAt && (
+                          <span className="text-green-600">
+                            完了: {new Date(todo.completedAt).toLocaleDateString()}
+                          </span>
+                        )}
                       </div>
                       <div className="text-right">
                         {new Date(todo.updatedAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}

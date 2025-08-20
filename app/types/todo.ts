@@ -26,6 +26,8 @@ export interface Todo {
   title: string;
   description: string | null;
   completed: boolean;
+  dueDate: string | null; // 完了予定日
+  completedAt: string | null; // 完了日時
   createdAt: string;
   updatedAt: string;
   createdById?: number | null;

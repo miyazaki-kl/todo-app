@@ -140,6 +140,7 @@ export default function ProjectTodoDetail() {
   }
 
   const isAssignedToCurrentUser = currentUser && todo.assignedTo?.id === currentUser.id;
+  const isOverdue = todo.dueDate && !todo.completed && new Date(todo.dueDate) < new Date();
 
   return (
     <main className="container mx-auto px-4 py-8">
@@ -169,6 +170,11 @@ export default function ProjectTodoDetail() {
         <div className="flex-1">
           <div className="flex items-center space-x-4 mb-2">
             {project && <ProjectBadge project={project} />}
+            {isOverdue && (
+              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                ⚠️ 期限切れ
+              </span>
+            )}
             {isAssignedToCurrentUser && (
               <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                 👤 担当中
@@ -266,6 +272,25 @@ export default function ProjectTodoDetail() {
               {new Date(todo.updatedAt).toLocaleString('ja-JP')}
             </p>
           </div>
+
+          {todo.dueDate && (
+            <div>
+              <h3 className="font-semibold text-gray-900 mb-2">完了予定日</h3>
+              <p className={`text-sm ${isOverdue ? 'text-red-600 font-medium' : 'text-gray-600'}`}>
+                {new Date(todo.dueDate).toLocaleDateString('ja-JP')}
+                {isOverdue && <span className="ml-2 text-red-500">⚠️ 期限切れ</span>}
+              </p>
+            </div>
+          )}
+
+          {todo.completedAt && (
+            <div>
+              <h3 className="font-semibold text-gray-900 mb-2">完了日時</h3>
+              <p className="text-sm text-green-600">
+                {new Date(todo.completedAt).toLocaleString('ja-JP')}
+              </p>
+            </div>
+          )}
         </div>
       </div>
 

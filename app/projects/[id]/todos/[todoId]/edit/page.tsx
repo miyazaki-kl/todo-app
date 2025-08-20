@@ -177,7 +177,8 @@ export default function EditTodoPage() {
             description: todo.description || '',
             completed: todo.completed,
             assignedToId: todo.assignedTo?.id || null,
-            labelIds: todo.labels?.map(label => label.label.id) || []
+            labelIds: todo.labels?.map(label => label.label.id) || [],
+            dueDate: todo.dueDate
           }}
           isEditMode={true}
           onTodoCreated={() => {}} // 編集モードでは使用されない

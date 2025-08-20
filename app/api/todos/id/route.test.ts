@@ -34,7 +34,10 @@ describe('Todo API (特定のID)', () => {
         completed: true,
       });
 
+      // 現在のTodoの状態をモック（完了状態変更検知のため）
+      mockPrisma.todo.findUnique.mockResolvedValue({ completed: false });
       mockPrisma.todo.update.mockResolvedValue(mockTodo);
+      mockPrisma.todoLabel.deleteMany.mockResolvedValue({ count: 0 });
 
       const { PUT } = require('../[id]/route');
       const request = new Request('http://localhost:3000/api/todos/1', {
@@ -50,12 +53,21 @@ describe('Todo API (特定のID)', () => {
       const response = await PUT(request, { params: { id: '1' } });
 
       await assertApiResponse(response, HttpStatus.OK, convertDatesToISOStrings(mockTodo));
+      expect(mockPrisma.todo.findUnique).toHaveBeenCalledWith({
+        where: { id: 1 },
+        select: { completed: true }
+      });
+      expect(mockPrisma.todoLabel.deleteMany).toHaveBeenCalledWith({
+        where: { todoId: 1 },
+      });
       expect(mockPrisma.todo.update).toHaveBeenCalledWith({
         where: { id: 1 },
         data: {
           title: '更新されたTodo',
           description: '更新された説明',
           completed: true,
+          dueDate: null,
+          completedAt: expect.any(Date),
           assignedToId: undefined,
           projectId: undefined,
           labels: undefined,
@@ -130,9 +142,8 @@ describe('Todo API (特定のID)', () => {
     });
 
     it('存在しないTodoの場合はエラーを返す', async () => {
-      const error = new Error('Record to update does not exist');
-      (error as any).code = 'P2025';
-      mockPrisma.todo.update.mockRejectedValue(error);
+      // findUniqueでnullを返してTodoが見つからないことをシミュレート
+      mockPrisma.todo.findUnique.mockResolvedValue(null);
 
       const { PUT } = require('../[id]/route');
       const request = new Request('http://localhost:3000/api/todos/999', {
@@ -146,6 +157,116 @@ describe('Todo API (特定のID)', () => {
       const response = await PUT(request, { params: { id: '999' } });
 
       await assertApiResponse(response, HttpStatus.NOT_FOUND, ErrorResponses.NOT_FOUND_ERROR('指定されたTodoが見つかりません'));
+    });
+
+    it('完了状態を未完了から完了に変更した場合、completedAtが自動設定される', async () => {
+      const mockTodo = MockData.todo({
+        id: 1,
+        title: 'テストTodo',
+        description: 'テスト説明',
+        completed: true,
+      });
+
+      // 現在のTodoの状態は未完了
+      mockPrisma.todo.findUnique.mockResolvedValue({ completed: false });
+      mockPrisma.todo.update.mockResolvedValue(mockTodo);
+      mockPrisma.todoLabel.deleteMany.mockResolvedValue({ count: 0 });
+
+      const { PUT } = require('../[id]/route');
+      const request = new Request('http://localhost:3000/api/todos/1', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: 'テストTodo',
+          description: 'テスト説明',
+          completed: true,
+        }),
+      });
+
+      const response = await PUT(request, { params: { id: '1' } });
+
+      expect(response.status).toBe(200);
+      expect(mockPrisma.todo.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            completed: true,
+            completedAt: expect.any(Date)
+          })
+        })
+      );
+    });
+
+    it('完了状態を完了から未完了に変更した場合、completedAtがnullに設定される', async () => {
+      const mockTodo = MockData.todo({
+        id: 1,
+        title: 'テストTodo',
+        description: 'テスト説明',
+        completed: false,
+      });
+
+      // 現在のTodoの状態は完了
+      mockPrisma.todo.findUnique.mockResolvedValue({ completed: true });
+      mockPrisma.todo.update.mockResolvedValue(mockTodo);
+      mockPrisma.todoLabel.deleteMany.mockResolvedValue({ count: 0 });
+
+      const { PUT } = require('../[id]/route');
+      const request = new Request('http://localhost:3000/api/todos/1', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: 'テストTodo',
+          description: 'テスト説明',
+          completed: false,
+        }),
+      });
+
+      const response = await PUT(request, { params: { id: '1' } });
+
+      expect(response.status).toBe(200);
+      expect(mockPrisma.todo.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            completed: false,
+            completedAt: null
+          })
+        })
+      );
+    });
+
+    it('dueDateを含むTodoを更新できる', async () => {
+      const mockTodo = MockData.todo({
+        id: 1,
+        title: '期限付きTodo',
+        description: '完了予定日が設定されたTodo',
+        completed: false,
+      });
+
+      mockPrisma.todo.findUnique.mockResolvedValue({ completed: false });
+      mockPrisma.todo.update.mockResolvedValue(mockTodo);
+      mockPrisma.todoLabel.deleteMany.mockResolvedValue({ count: 0 });
+
+      const { PUT } = require('../[id]/route');
+      const request = new Request('http://localhost:3000/api/todos/1', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: '期限付きTodo',
+          description: '完了予定日が設定されたTodo',
+          completed: false,
+          dueDate: '2024-12-31',
+        }),
+      });
+
+      const response = await PUT(request, { params: { id: '1' } });
+
+      expect(response.status).toBe(200);
+      expect(mockPrisma.todo.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            dueDate: new Date('2024-12-31')
+          })
+        })
+      );
     });
   });
 

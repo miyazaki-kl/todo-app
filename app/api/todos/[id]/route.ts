@@ -83,13 +83,36 @@ export const PUT = withAuth(async (
     }
 
     const body = await request.json();
-    const { title, description, completed, assignedToId, projectId, labelIds } = body;
+    const { title, description, completed, assignedToId, projectId, labelIds, dueDate } = body;
 
     if (!title) {
       return NextResponse.json(
         { error: 'タイトルは必須です' },
         { status: 400 }
       );
+    }
+
+    // 現在のTodoの状態を取得して完了状態の変更を検知
+    const currentTodo = await prisma.todo.findUnique({
+      where: { id },
+      select: { completed: true }
+    });
+
+    if (!currentTodo) {
+      return NextResponse.json(
+        { error: '指定されたTodoが見つかりません' },
+        { status: 404 }
+      );
+    }
+
+    // completedAt の自動設定ロジック
+    let completedAt: Date | null = null;
+    if (completed && !currentTodo.completed) {
+      // 未完了から完了に変更された場合、現在時刻を設定
+      completedAt = new Date();
+    } else if (!completed && currentTodo.completed) {
+      // 完了から未完了に変更された場合、nullに設定
+      completedAt = null;
     }
 
     // 既存のラベル関連付けを削除してから新しく作成
@@ -103,6 +126,8 @@ export const PUT = withAuth(async (
         title,
         description,
         completed,
+        dueDate: dueDate ? new Date(dueDate) : null,
+        ...(completedAt !== null || (!completed && currentTodo.completed) ? { completedAt } : {}),
         assignedToId,
         projectId,
         labels: labelIds && labelIds.length > 0 ? {
