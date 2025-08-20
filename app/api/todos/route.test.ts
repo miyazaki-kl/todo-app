@@ -237,6 +237,7 @@ describe('Todo API', () => {
           createdById: undefined,
           assignedToId: undefined,
           projectId: 1,
+          dueDate: null,
           labels: undefined,
         },
         include: {
@@ -344,6 +345,7 @@ describe('Todo API', () => {
           createdById: 1,
           assignedToId: undefined,
           projectId: 1,
+          dueDate: null,
           labels: {
             create: [
               { labelId: 1 },
@@ -448,6 +450,7 @@ describe('Todo API', () => {
           createdById: 1,
           assignedToId: 2,
           projectId: 1,
+          dueDate: null,
           labels: undefined,
         },
         include: {
@@ -551,6 +554,7 @@ describe('Todo API', () => {
           createdById: 1,
           assignedToId: 2,
           projectId: 1,
+          dueDate: null,
           labels: {
             create: [
               { labelId: 1 }
@@ -654,6 +658,7 @@ describe('Todo API', () => {
           createdById: 1,
           assignedToId: undefined,
           projectId: 1,
+          dueDate: null,
           labels: undefined,
         },
         include: {
@@ -694,6 +699,61 @@ describe('Todo API', () => {
         },
       });
       expect(data.labels).toEqual([]);
+    });
+
+    it('完了予定日を含むTodoを作成できる', async () => {
+      const now = new Date();
+      const dueDate = new Date('2024-12-31');
+      const mockTodo = {
+        id: 1,
+        title: '期限付きTodo',
+        description: '完了予定日が設定されたTodo',
+        completed: false,
+        dueDate: dueDate,
+        completedAt: null,
+        createdAt: now,
+        updatedAt: now,
+        createdBy: { id: 1, name: 'User 1', email: 'user1@example.com' },
+        assignedTo: null,
+        labels: []
+      };
+
+      (mockPrisma.todo.create as jest.Mock).mockResolvedValue(mockTodo);
+
+      const { POST } = require('./route');
+      const request = createAuthenticatedMockRequest('http://localhost:3000/api/todos', {
+        method: 'POST',
+        body: JSON.stringify({
+          title: '期限付きTodo',
+          description: '完了予定日が設定されたTodo',
+          projectId: 1,
+          dueDate: '2024-12-31',
+        }),
+      });
+
+      const response = await POST(request);
+      const data = await response.json();
+
+      expect(response.constructor.name).toBe('NextResponse');
+      expect(data).toEqual({
+        ...mockTodo,
+        dueDate: dueDate.toISOString(),
+        createdAt: mockTodo.createdAt.toISOString(),
+        updatedAt: mockTodo.updatedAt.toISOString(),
+      });
+      expect(response.status).toBe(201);
+      expect(mockPrisma.todo.create).toHaveBeenCalledWith({
+        data: {
+          title: '期限付きTodo',
+          description: '完了予定日が設定されたTodo',
+          createdById: undefined,
+          assignedToId: undefined,
+          projectId: 1,
+          dueDate: dueDate,
+          labels: undefined,
+        },
+        include: expect.any(Object),
+      });
     });
 
     it('エラー時に適切なエラーレスポンスを返す', async () => {

@@ -26,6 +26,8 @@ model Todo {
   title       String
   description String?
   completed   Boolean  @default(false)
+  dueDate     DateTime? // 完了予定日
+  completedAt DateTime? // 完了日時
   userId      Int?
   createdById Int?
   assignedToId Int?

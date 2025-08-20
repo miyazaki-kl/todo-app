@@ -86,7 +86,7 @@ export const GET = withAuth(async (request: NextRequest, user) => {
 export const POST = withAuth(async (request: NextRequest, user) => {
   try {
     const body = await request.json();
-    const { title, description, createdById, assignedToId, projectId, labelIds } = body;
+    const { title, description, createdById, assignedToId, projectId, labelIds, dueDate } = body;
 
     if (!title) {
       return NextResponse.json(
@@ -109,6 +109,7 @@ export const POST = withAuth(async (request: NextRequest, user) => {
         createdById,
         assignedToId,
         projectId,
+        dueDate: dueDate ? new Date(dueDate) : null,
         labels: labelIds && labelIds.length > 0 ? {
           create: labelIds.map((labelId: number) => ({
             labelId,
