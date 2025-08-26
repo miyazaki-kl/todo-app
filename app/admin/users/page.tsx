@@ -31,6 +31,8 @@ export default function AdminUsersPage() {
   const [success, setSuccess] = useState('');
   const [showForm, setShowForm] = useState(false);
   const [isVerifyingAdmin, setIsVerifyingAdmin] = useState(true);
+  const [deleteConfirm, setDeleteConfirm] = useState<{show: boolean, user: User | null}>({show: false, user: null});
+  const [isDeleting, setIsDeleting] = useState(false);
   const router = useRouter();
 
   // 管理者権限チェック（クライアントサイド + サーバーサイド）
@@ -137,6 +139,47 @@ export default function AdminUsersPage() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleDeleteUser = async (user: User) => {
+    setDeleteConfirm({ show: true, user });
+  };
+
+  const confirmDeleteUser = async () => {
+    if (!deleteConfirm.user) return;
+
+    setIsDeleting(true);
+    setError('');
+    setSuccess('');
+
+    try {
+      const token = localStorage.getItem('authToken');
+      const response = await fetch(`/api/users/${deleteConfirm.user.id}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setSuccess(data.message || 'ユーザーが正常に削除されました');
+        loadUsers(); // ユーザー一覧を再読み込み
+      } else {
+        setError(data.error || 'ユーザー削除に失敗しました');
+      }
+    } catch (error) {
+      console.error('ユーザー削除エラー:', error);
+      setError('サーバーエラーが発生しました');
+    } finally {
+      setIsDeleting(false);
+      setDeleteConfirm({ show: false, user: null });
+    }
+  };
+
+  const cancelDelete = () => {
+    setDeleteConfirm({ show: false, user: null });
   };
 
   // 管理者権限確認中の表示
@@ -294,6 +337,14 @@ export default function AdminUsersPage() {
                         <span className="text-sm text-gray-500">
                           {user.createdAt ? new Date(user.createdAt).toLocaleDateString('ja-JP') : '不明'}
                         </span>
+                        {!user.isAdmin && (
+                          <button
+                            onClick={() => handleDeleteUser(user)}
+                            className="inline-flex items-center px-2 py-1 border border-red-300 rounded text-xs font-medium text-red-700 bg-white hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                          >
+                            削除
+                          </button>
+                        )}
                       </div>
                     </div>
                   </li>
@@ -302,6 +353,51 @@ export default function AdminUsersPage() {
             </div>
           </div>
         </div>
+
+        {/* 削除確認ダイアログ */}
+        {deleteConfirm.show && deleteConfirm.user && (
+          <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+            <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+              <div className="mt-3">
+                <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100">
+                  <svg className="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.962-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                  </svg>
+                </div>
+                <div className="mt-2 text-center">
+                  <h3 className="text-lg leading-6 font-medium text-gray-900">
+                    ユーザーの削除
+                  </h3>
+                  <div className="mt-2">
+                    <p className="text-sm text-gray-500">
+                      ユーザー「{deleteConfirm.user.name}」を削除しますか？
+                      <br />
+                      この操作は元に戻せません。
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div className="items-center px-4 py-3">
+                <div className="flex justify-center space-x-4">
+                  <button
+                    onClick={cancelDelete}
+                    disabled={isDeleting}
+                    className="px-4 py-2 bg-gray-500 text-white text-base font-medium rounded-md w-24 hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-300 disabled:opacity-50"
+                  >
+                    キャンセル
+                  </button>
+                  <button
+                    onClick={confirmDeleteUser}
+                    disabled={isDeleting}
+                    className="px-4 py-2 bg-red-600 text-white text-base font-medium rounded-md w-24 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-300 disabled:opacity-50"
+                  >
+                    {isDeleting ? '削除中...' : '削除'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
