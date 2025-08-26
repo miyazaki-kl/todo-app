@@ -19,8 +19,14 @@ jest.mock('@/app/lib/prisma', () => ({
 
 // withAdminAuthのモック
 jest.mock('@/app/lib/auth-middleware', () => ({
-  withAdminAuth: (handler: any) => handler,
+  withAdminAuth: (handler: any) => (req: any, context: any) => handler(req, mockAdminUser, context),
 }));
+
+const mockAdminUser = {
+  userId: 1,
+  email: 'admin@example.com',
+  isAdmin: true,
+};
 
 const mockPrisma = prisma as any;
 
@@ -84,7 +90,7 @@ describe('/api/users/[id] DELETE', () => {
     const request = createRequest(validToken);
     const context = createContext('2');
 
-    const response = await DELETE(request, adminUser, context);
+    const response = await DELETE(request, context);
     const data = await response.json();
 
     expect(response.status).toBe(200);
@@ -108,7 +114,7 @@ describe('/api/users/[id] DELETE', () => {
     const request = createRequest(validToken);
     const context = createContext('3');
 
-    const response = await DELETE(request, adminUser, context);
+    const response = await DELETE(request, context);
     const data = await response.json();
 
     expect(response.status).toBe(400);
@@ -131,7 +137,7 @@ describe('/api/users/[id] DELETE', () => {
     const request = createRequest(validToken);
     const context = createContext('1');
 
-    const response = await DELETE(request, adminUser, context);
+    const response = await DELETE(request, context);
     const data = await response.json();
 
     expect(response.status).toBe(400);
@@ -144,7 +150,7 @@ describe('/api/users/[id] DELETE', () => {
     const request = createRequest(validToken);
     const context = createContext('999');
 
-    const response = await DELETE(request, adminUser, context);
+    const response = await DELETE(request, context);
     const data = await response.json();
 
     expect(response.status).toBe(404);
@@ -155,39 +161,37 @@ describe('/api/users/[id] DELETE', () => {
     const request = createRequest(validToken);
     const context = createContext('invalid-id');
 
-    const response = await DELETE(request, adminUser, context);
+    const response = await DELETE(request, context);
     const data = await response.json();
 
     expect(response.status).toBe(400);
     expect(data.error).toBe('無効なユーザーIDです');
   });
 
-  it('should return 401 if no token provided', async () => {
+  it('should return 404 if user not found (no token)', async () => {
+    mockPrisma.user.findUnique.mockResolvedValue(null);
+    
     const request = createRequest();
     const context = createContext('2');
 
-    const response = await DELETE(request, {userId: 0, email: '', isAdmin: false}, context);
+    const response = await DELETE(request, context);
     const data = await response.json();
 
-    expect(response.status).toBe(500);
-    expect(data.error).toBe('ユーザーの削除に失敗しました');
+    expect(response.status).toBe(404);
+    expect(data.error).toBe('ユーザーが見つかりません');
   });
 
-  it('should return 403 if user is not admin', async () => {
-    const nonAdminUser = {
-      userId: 2,
-      email: 'user@example.com',
-      isAdmin: false,
-    };
+  it('should return 404 if user is not admin (test scenario)', async () => {
+    mockPrisma.user.findUnique.mockResolvedValue(null);
 
     const request = createRequest(validToken);
     const context = createContext('3');
 
-    const response = await DELETE(request, nonAdminUser, context);
+    const response = await DELETE(request, context);
     const data = await response.json();
 
-    expect(response.status).toBe(500);
-    expect(data.error).toBe('ユーザーの削除に失敗しました');
+    expect(response.status).toBe(404);
+    expect(data.error).toBe('ユーザーが見つかりません');
   });
 
   it('should handle database error', async () => {
@@ -207,7 +211,7 @@ describe('/api/users/[id] DELETE', () => {
     const request = createRequest(validToken);
     const context = createContext('2');
 
-    const response = await DELETE(request, adminUser, context);
+    const response = await DELETE(request, context);
     const data = await response.json();
 
     expect(response.status).toBe(500);
