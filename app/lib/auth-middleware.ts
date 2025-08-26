@@ -80,6 +80,39 @@ export function withAuth<T extends any[], R>(
   };
 }
 
+// 管理者権限が必要なAPIエンドポイント用のミドルウェア
+export function withAdminAuth<T extends any[], R>(
+  handler: (request: NextRequest, user: DecodedToken, ...args: T) => Promise<R>
+) {
+  return async (request: NextRequest, ...args: T): Promise<R | NextResponse> => {
+    const { authenticated, user, error } = await authenticateRequest(request);
+
+    if (!authenticated) {
+      return NextResponse.json(
+        { 
+          success: false, 
+          message: error || '認証が必要です' 
+        },
+        { status: 401 }
+      );
+    }
+
+    // 管理者権限チェック
+    if (!user?.isAdmin) {
+      return NextResponse.json(
+        { 
+          success: false, 
+          message: '管理者権限が必要です' 
+        },
+        { status: 403 }
+      );
+    }
+
+    // 認証および管理者権限確認成功時はハンドラーを実行
+    return handler(request, user!, ...args);
+  };
+}
+
 /**
  * 認証エラーレスポンスを生成する
  * @param message - エラーメッセージ
